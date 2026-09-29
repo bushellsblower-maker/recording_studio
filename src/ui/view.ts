@@ -6,6 +6,7 @@ import type { EngineSnapshot, FolderId, InputMode, LaunchQuant, Levels, MicState
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
 import type { KeyVoiceRequest } from '../audio/voices';
+import type { LaneClip } from '../audio/engine';
 import { attachDeskLayout } from './desk-layout';
 import { buildDevices } from './devices';
 import { buildInstructions } from './instructions';
@@ -66,7 +67,7 @@ export interface ConsoleHandlers {
   trackDb: (index: number, db: number) => void;
   trackPan: (index: number, pan: number) => void;
   trackKind: (index: number, kind: 'audio' | 'instrument') => void;
-  trackStart: (index: number, beat: number) => void;
+  trackStart: (index: number, beat: number, clipId?: string) => void;
   trackImport: (index: number, file: File, beat: number) => void;
   trackDropSample: (index: number, sampleId: string, beat: number) => void;
   downloadTrack: (index: number) => void;
@@ -93,7 +94,7 @@ export interface ConsoleHandlers {
   addMarker: () => void;
   removeMarker: (id: string) => void;
   locate: (beat: number) => void;
-  editClipEdge: (index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number) => void;
+  editClipEdge: (index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number, clipId?: string) => void;
   setInsert: (track: number, slot: number, kind: PluginKind | null) => void;
   moveInsert: (track: number, from: number, to: number) => void;
   bypassInsert: (track: number, slot: number, bypass: boolean) => void;
@@ -130,6 +131,7 @@ export interface PaintFrame extends Levels {
   eq: readonly number[] | null;
   bpm: number;
   spans: readonly { startBeat: number; lengthBeats: number }[];
+  lanes: readonly (readonly LaneClip[])[];
   loopStartBeat: number;
   loopBeats: number;
   looping: boolean;
@@ -573,8 +575,9 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const trackList = document.createElement('div');
   trackList.className = 'tracks';
   let arrangeBeats = 16;
-  const dragBeats = new Map<number, number>();
-  let dragging: { index: number; origin: number; grab: number; mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' } | null = null;
+  const dragBeats = new Map<string, number>();
+  let dragging: { index: number; clipId: string; origin: number; grab: number; mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' } | null = null;
+  let lanes: readonly (readonly LaneClip[])[] = [];
   let loopPreview: { startBeat: number; endBeat: number } | null = null;
   let rulerAnchor = 0;
   let rulerActive = false;
@@ -757,6 +760,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     });
     rowEl.addEventListener('dragover', (event) => {
       event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
       rowEl.classList.add('is-drop');
     });
     rowEl.addEventListener('dragleave', () => rowEl.classList.remove('is-drop'));
@@ -770,44 +774,49 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       if (sampleId) handlers.trackDropSample(index, sampleId, beat);
       else if (dropped) handlers.trackImport(index, dropped, beat);
     });
+    canvas.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    });
     canvas.addEventListener('pointerdown', (event) => {
       if (last?.mode === 'recording' || last?.mode === 'stopping') return;
-      const span = spans[index];
-      if (!span || span.lengthBeats <= 0) return;
       const beat = beatFromClient(canvas, event.clientX);
-      const origin = dragBeats.get(index) ?? span.startBeat;
-      const end = origin + span.lengthBeats;
+      const clip = hitClip(lanes[index] ?? [], beat);
+      if (!clip || clip.id === 'pending') return;
+      const origin = dragBeats.get(clip.id) ?? clip.startBeat;
+      const end = origin + clip.lengthBeats;
       if (beat < origin - 0.05 || beat > end + 0.05) return;
       const rect = canvas.getBoundingClientRect();
       const edge = Math.max(0.2, (12 / Math.max(1, rect.width)) * viewSpan);
       let mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' = 'move';
-      if (event.altKey) mode = beat < origin + span.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
+      if (event.altKey) mode = beat < origin + clip.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
       else if (beat <= origin + edge) mode = 'start';
       else if (beat >= end - edge) mode = 'end';
-      dragging = { index, origin, grab: beat - origin, mode };
+      dragging = { index, clipId: clip.id, origin, grab: beat - origin, mode };
       canvas.setPointerCapture(event.pointerId);
       event.preventDefault();
       event.stopPropagation();
     });
     canvas.addEventListener('pointermove', (event) => {
       if (!dragging || dragging.index !== index || !canvas.hasPointerCapture(event.pointerId)) return;
-      if (dragging.mode === 'move') dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, gridFine(event.shiftKey)));
+      if (dragging.mode === 'move') dragBeats.set(dragging.clipId, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, gridFine(event.shiftKey)));
     });
     const finishDrag = (event: PointerEvent): void => {
       if (!dragging || dragging.index !== index) return;
       const mode = dragging.mode;
-      const beat = mode === 'move' ? (dragBeats.get(index) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), gridFine(event.shiftKey));
+      const clipId = dragging.clipId;
+      const beat = mode === 'move' ? (dragBeats.get(clipId) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), gridFine(event.shiftKey));
       dragging = null;
-      dragBeats.delete(index);
-      if (mode === 'move') handlers.trackStart(index, beat);
-      else handlers.editClipEdge(index, mode, beat);
+      dragBeats.delete(clipId);
+      if (mode === 'move') handlers.trackStart(index, beat, clipId);
+      else handlers.editClipEdge(index, mode, beat, clipId);
       event.stopPropagation();
     };
     canvas.addEventListener('pointerup', finishDrag);
     canvas.addEventListener('pointercancel', () => {
       if (!dragging || dragging.index !== index) return;
+      dragBeats.delete(dragging.clipId);
       dragging = null;
-      dragBeats.delete(index);
     });
     rowEl.append(id, toggles, mix, canvas, time, actions);
     trackList.append(rowEl);
@@ -968,7 +977,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   arrangeHead.append(arrangeTitle);
   const arrangeHint = document.createElement('p');
   arrangeHint.className = 'note';
-  arrangeHint.textContent = 'Drag a clip to move it. Drag the edges to trim, or hold Alt and drag an edge for a fade. Shift snaps to 16ths. Markers jump the cue; Alt-click a marker to remove it.';
+  arrangeHint.textContent = 'Drop sounds on a lane to add clips. Each clip is as wide as the sound is long. Drag a clip to move it. Drag the edges to trim, or hold Alt and drag an edge for a fade. Shift snaps to 16ths. Markers jump the cue; Alt-click a marker to remove it.';
 
   const guide = document.createElement('ol');
   guide.className = 'guide';
@@ -1069,7 +1078,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
+    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Drop sounds on a lane to add clips; each bar matches the sound’s length. Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
   footer.append(footerSummary, footerCopy);
 
   const desk = document.createElement('div');
@@ -1261,6 +1270,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     gr.read.textContent = reduction < 0.05 ? '0' : reduction.toFixed(1);
 
     spans = frame.spans.map((span) => ({ startBeat: span.startBeat, lengthBeats: span.lengthBeats }));
+    lanes = frame.lanes;
     let endBeat = 16;
     for (const span of spans) endBeat = Math.max(endBeat, span.startBeat + span.lengthBeats);
     const showRange = loopPreview !== null || frame.looping || frame.rangeCustom;
@@ -1306,26 +1316,25 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     devices.paint({ reductions: frame.reductions, eq: frame.eq ? [...frame.eq] : null });
     tracks.forEach((track, index) => {
       const duration = frame.durations[index] ?? 0;
-      const span = spans[index] ?? { startBeat: 0, lengthBeats: 0 };
       track.time.textContent = formatTime(duration);
       const level = frame.trackLevels[index] ?? 0;
       track.meterFill.style.height = `${meterPercent(level)}%`;
       track.rmsFill.style.height = `${meterPercent(frame.trackRms[index] ?? 0)}%`;
-      track.canvas.classList.toggle('is-clip', span.lengthBeats > 0);
+      const drawn = (lanes[index] ?? []).map((clip) => ({
+        ...clip,
+        startBeat: (dragBeats.get(clip.id) ?? clip.startBeat) - origin,
+      }));
+      track.canvas.classList.toggle('is-clip', drawn.some((clip) => clip.lengthBeats > 0));
       const fades = last?.tracks[index];
       drawLane(
         track.canvas,
-        frame.peaks[index] ?? [],
-        (dragBeats.get(index) ?? span.startBeat) - origin,
-        span.lengthBeats,
+        drawn,
         viewSpan,
         loopStartBeat - origin,
         loopBeats,
         playhead < 0 ? -1 : playhead - origin,
         TRACK_COLORS[index] ?? '#e0a106',
         strongRange,
-        fades?.fadeInBeats ?? 0,
-        fades?.fadeOutBeats ?? 0,
         (fades?.volumeAuto ?? []).map((point) => ({ beat: point.beat - origin, value: point.value })),
       );
     });
@@ -1593,19 +1602,23 @@ function drawRuler(
   paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
 }
 
+function hitClip(clips: readonly LaneClip[], beat: number): LaneClip | null {
+  let found: LaneClip | null = null;
+  for (const clip of clips) {
+    if (beat >= clip.startBeat - 0.08 && beat <= clip.startBeat + clip.lengthBeats + 0.08) found = clip;
+  }
+  return found;
+}
+
 function drawLane(
   canvas: HTMLCanvasElement,
-  peaks: readonly number[],
-  startBeat: number,
-  lengthBeats: number,
+  clips: readonly LaneClip[],
   viewBeats: number,
   loopStart: number,
   loopBeats: number,
   playhead: number,
   color: string,
   strong = false,
-  fadeInBeats = 0,
-  fadeOutBeats = 0,
   volume: readonly { beat: number; value: number }[] = [],
 ): void {
   const size = resizeCanvas(canvas);
@@ -1626,34 +1639,39 @@ function drawLane(
     ctx.fillStyle = beat % 4 === 0 ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.05)';
     ctx.fillRect(x, 0, 1, size.height);
   }
-  if (lengthBeats > 0 && peaks.length > 0) {
-    const x0 = (startBeat / viewBeats) * size.width;
-    const clipWidth = Math.max(2, (lengthBeats / viewBeats) * size.width);
-    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for (const clip of clips) {
+    if (clip.lengthBeats <= 0) continue;
+    const x0 = (clip.startBeat / viewBeats) * size.width;
+    const clipWidth = Math.max(1, (clip.lengthBeats / viewBeats) * size.width);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
     ctx.fillRect(x0, 2, clipWidth, size.height - 4);
-    ctx.fillStyle = color;
-    const columns = Math.max(1, Math.floor(clipWidth));
-    for (let x = 0; x < columns; x++) {
-      const start = Math.floor((x / columns) * peaks.length);
-      const end = Math.min(peaks.length, Math.max(start + 1, Math.floor(((x + 1) / columns) * peaks.length)));
-      let peak = 0;
-      for (let i = start; i < end; i++) {
-        const value = peaks[i] ?? 0;
-        if (value > peak) peak = value;
+    ctx.strokeStyle = color;
+    ctx.strokeRect(x0 + 0.5, 2.5, Math.max(0, clipWidth - 1), size.height - 5);
+    if (clip.peaks.length > 0) {
+      ctx.fillStyle = color;
+      const columns = Math.max(1, Math.floor(clipWidth));
+      for (let x = 0; x < columns; x++) {
+        const start = Math.floor((x / columns) * clip.peaks.length);
+        const end = Math.min(clip.peaks.length, Math.max(start + 1, Math.floor(((x + 1) / columns) * clip.peaks.length)));
+        let peak = 0;
+        for (let i = start; i < end; i++) {
+          const value = clip.peaks[i] ?? 0;
+          if (value > peak) peak = value;
+        }
+        const h = Math.max(1, Math.min(1, peak) * (size.height - 8));
+        ctx.fillRect(x0 + x, (size.height - h) / 2, 1, h);
       }
-      const h = Math.max(1, Math.min(1, peak) * (size.height - 8));
-      ctx.fillRect(x0 + x, (size.height - h) / 2, 1, h);
     }
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    if (fadeInBeats > 0) {
+    if (clip.fadeInBeats > 0) {
       ctx.beginPath();
       ctx.moveTo(x0, 2);
-      ctx.lineTo(x0 + (fadeInBeats / viewBeats) * size.width, size.height - 2);
+      ctx.lineTo(x0 + (clip.fadeInBeats / viewBeats) * size.width, size.height - 2);
       ctx.lineTo(x0, size.height - 2);
       ctx.fill();
     }
-    if (fadeOutBeats > 0) {
-      const fadeX = x0 + ((lengthBeats - fadeOutBeats) / viewBeats) * size.width;
+    if (clip.fadeOutBeats > 0) {
+      const fadeX = x0 + ((clip.lengthBeats - clip.fadeOutBeats) / viewBeats) * size.width;
       const endX = x0 + clipWidth;
       ctx.beginPath();
       ctx.moveTo(fadeX, size.height - 2);
@@ -1661,6 +1679,12 @@ function drawLane(
       ctx.lineTo(endX, size.height - 2);
       ctx.fill();
     }
+    const label = formatTime(clip.duration);
+    ctx.font = `${Math.max(9, Math.floor(size.height * 0.28))}px ui-monospace, monospace`;
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#f4f7fb';
+    const labelX = clipWidth >= ctx.measureText(label).width + 8 ? x0 + 4 : x0 + clipWidth + 4;
+    ctx.fillText(label, labelX, 3);
   }
   if (volume.length > 1) {
     ctx.strokeStyle = 'rgba(240, 162, 2, 0.9)';

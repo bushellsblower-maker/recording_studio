@@ -30,7 +30,7 @@ import {
   type LivePlugin,
   type PluginKind,
 } from './plugins';
-import { loadProject, saveProject, type StoredClip, type StoredProject, type StoredSlot } from './project';
+import { loadProject, saveProject, type StoredArrangementClip, type StoredClip, type StoredProject, type StoredSlot } from './project';
 import { type HeldNote, startNote } from './synth';
 import { clamp, clampRange, dbToGain, formatBeatPosition, formatTime, musicalPosition } from './units';
 import { concatFloat32, encodeStereoWav, sumStereo } from './wav';
@@ -83,6 +83,30 @@ interface SessionSlot {
   bpm: number | null;
 }
 
+interface ArrangementClip {
+  id: string;
+  buffer: AudioBuffer;
+  peaks: number[];
+  name: string;
+  clipBpm: number | null;
+  startBeat: number;
+  trimStart: number;
+  trimEnd: number;
+  fadeInBeats: number;
+  fadeOutBeats: number;
+}
+
+export interface LaneClip {
+  id: string;
+  name: string;
+  startBeat: number;
+  lengthBeats: number;
+  duration: number;
+  peaks: readonly number[];
+  fadeInBeats: number;
+  fadeOutBeats: number;
+}
+
 interface Track {
   armed: boolean;
   muted: boolean;
@@ -95,6 +119,8 @@ interface Track {
   clipBpm: number | null;
   buffer: AudioBuffer | null;
   peaks: number[];
+  /** Arrangement clips on this lane. A drop appends; it does not replace the others. */
+  clips: ArrangementClip[];
   chunksL: Float32Array[];
   chunksR: Float32Array[];
   samples: number;
@@ -134,6 +160,7 @@ interface HistoryClip {
   trimEnd: number;
   fadeInBeats: number;
   fadeOutBeats: number;
+  arrangement: ArrangementClip[];
   slots: SessionSlot[];
   sessionSlot: number | null;
   volumeAuto: AutoPoint[];
@@ -204,6 +231,7 @@ export class StudioEngine {
   private held = new Map<number, HeldNote>();
   private keyLayers: Array<{ buffer: AudioBuffer; rootMidi: number }> | null = null;
   private undoStack: History[] = [];
+  private clipSerial = 1;
   private redoStack: History[] = [];
   private launches: PendingLaunch[] = [];
   private meterBufs: Float32Array<ArrayBuffer>[] = [];
@@ -451,17 +479,19 @@ export class StudioEngine {
     this.listener.onChange();
   }
 
-  setTrackStartBeat(index: number, beat: number): void {
+  setTrackStartBeat(index: number, beat: number, clipId?: string): void {
     const track = this.tracks[index];
-    if (!track) return;
+    const clip = track ? this.clipById(track, clipId) : null;
+    if (!track || !clip) return;
     if (this.mode === 'recording' || this.mode === 'stopping') {
       this.status('Stop recording before moving a clip.');
       return;
     }
     const next = Math.max(0, Math.min(256, beat));
-    if (track.startBeat === next) return;
+    if (clip.startBeat === next) return;
     this.stash();
-    track.startBeat = next;
+    clip.startBeat = next;
+    this.syncMirror(track);
     if (this.mode === 'playing') this.play();
     else this.listener.onChange();
   }
@@ -526,12 +556,16 @@ export class StudioEngine {
 
   sessionLength(): number {
     let longest = 0;
-    for (const track of this.tracks) longest = Math.max(longest, this.clipWallStart(track) + this.clipWallLength(track));
+    for (const track of this.tracks) longest = Math.max(longest, this.trackDuration(track));
     return longest;
   }
 
   durations(): number[] {
-    return this.tracks.map((track) => this.clipWallLength(track));
+    return this.tracks.map((track) => this.trackDuration(track));
+  }
+
+  laneClips(): LaneClip[][] {
+    return this.tracks.map((track) => this.laneFor(track));
   }
 
   bpm(): number {
@@ -1086,33 +1120,35 @@ export class StudioEngine {
     this.listener.onChange();
   }
 
-  editClipEdge(index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number): void {
+  editClipEdge(index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number, clipId?: string): void {
     const track = this.tracks[index];
-    if (!track?.buffer) return;
+    const clip = track ? this.clipById(track, clipId) : null;
+    if (!track || !clip) return;
     if (this.mode === 'recording' || this.mode === 'stopping') return;
-    const span = this.clipSpansFor(track);
-    const rate = Math.max(0.001, this.clipRate(track));
+    const lengthBeats = this.lengthBeatsOf(clip);
+    const rate = Math.max(0.001, this.rateFor(clip.clipBpm));
     const secondsPerBeat = this.secondsPerBeat();
     if (edge === 'start') {
-      const delta = beat - track.startBeat;
-      const nextTrim = track.trimStart + delta * secondsPerBeat * rate;
-      const end = track.trimEnd > 0 ? track.trimEnd : track.buffer.duration;
+      const delta = beat - clip.startBeat;
+      const nextTrim = clip.trimStart + delta * secondsPerBeat * rate;
+      const end = clip.trimEnd > 0 ? clip.trimEnd : clip.buffer.duration;
       if (nextTrim < 0 || nextTrim > end - 0.02) return;
       this.stash();
-      track.trimStart = nextTrim;
-      track.startBeat = Math.max(0, beat);
+      clip.trimStart = nextTrim;
+      clip.startBeat = Math.max(0, beat);
     } else if (edge === 'end') {
       this.stash();
-      const lengthBeats = Math.max(0.25, beat - track.startBeat);
-      track.trimEnd = Math.min(track.buffer.duration, track.trimStart + lengthBeats * secondsPerBeat * rate);
+      const nextLength = Math.max(0.25, beat - clip.startBeat);
+      clip.trimEnd = Math.min(clip.buffer.duration, clip.trimStart + nextLength * secondsPerBeat * rate);
     } else if (edge === 'fade-in') {
       this.stash();
-      track.fadeInBeats = clamp(beat - span.startBeat, 0, Math.max(0, span.lengthBeats * 0.5));
+      clip.fadeInBeats = clamp(beat - clip.startBeat, 0, Math.max(0, lengthBeats * 0.5));
     } else {
       this.stash();
-      const endBeat = span.startBeat + span.lengthBeats;
-      track.fadeOutBeats = clamp(endBeat - beat, 0, Math.max(0, span.lengthBeats * 0.5));
+      const endBeat = clip.startBeat + lengthBeats;
+      clip.fadeOutBeats = clamp(endBeat - beat, 0, Math.max(0, lengthBeats * 0.5));
     }
+    this.syncMirror(track);
     if (this.mode === 'playing') this.play();
     else this.listener.onChange();
   }
@@ -1200,16 +1236,17 @@ export class StudioEngine {
   copyClipToSlot(index: number, slot: number): void {
     const track = this.tracks[index];
     if (!track || slot < 0 || slot >= SCENE_COUNT) return;
-    if (!track.buffer) {
+    const clip = this.headClip(track);
+    if (!clip) {
       this.status('Record or place a clip before filling a scene slot.');
       return;
     }
     this.stash();
     track.slots[slot] = {
-      buffer: track.buffer,
-      name: track.name || 'Clip',
-      peaks: track.peaks.slice(),
-      bpm: track.clipBpm,
+      buffer: clip.buffer,
+      name: clip.name || 'Clip',
+      peaks: clip.peaks.slice(),
+      bpm: clip.clipBpm,
     };
     this.status(`Scene ${slot + 1} on track ${index + 1} holds ${track.slots[slot]?.name}.`);
     this.listener.onChange();
@@ -1338,24 +1375,18 @@ export class StudioEngine {
       return false;
     }
     this.stash();
-    track.buffer = buffer;
-    track.peaks = computePeaks(buffer);
-    track.name = info.name;
-    track.clipBpm = info.bpm;
-    track.trimStart = 0;
-    track.trimEnd = 0;
-    track.fadeInBeats = 0;
-    track.fadeOutBeats = 0;
-    track.sessionSlot = null;
-    if (info.startBeat !== undefined) track.startBeat = Math.max(0, Math.min(256, info.startBeat));
+    const clip = this.makeClip(buffer, info);
+    track.clips.push(clip);
     track.pending = false;
     track.chunksL = [];
     track.chunksR = [];
     track.samples = 0;
+    this.syncMirror(track);
     if (this.mode === 'playing') this.play();
     const tempo = info.bpm ? ` It follows the ${Math.round(info.bpm)} BPM click.` : '';
-    const placed = track.startBeat > 0 ? ` It starts at beat ${formatBeat(track.startBeat)}.` : '';
-    this.status(`Loaded ${info.name} on track ${index + 1}.${placed}${tempo}`);
+    const placed = clip.startBeat > 0 ? ` It starts at beat ${formatBeat(clip.startBeat)}.` : '';
+    const extra = track.clips.length > 1 ? ` ${track.clips.length} clips on this track.` : '';
+    this.status(`Added ${info.name} on track ${index + 1}.${placed}${tempo}${extra}`);
     this.listener.onChange();
     return true;
   }
@@ -1525,6 +1556,7 @@ export class StudioEngine {
     for (const track of this.tracks) {
       if (!track.armed) continue;
       track.pending = true;
+      track.clips = [];
       track.buffer = null;
       track.peaks = [];
       track.name = '';
@@ -1549,7 +1581,7 @@ export class StudioEngine {
       this.metro.level = this.metroLevel;
       this.metro.start(startAt - countSec);
     }
-    const playing = this.tracks.filter((track) => !track.armed && track.buffer).length;
+    const playing = this.tracks.filter((track) => !track.armed && track.clips.length > 0).length;
     const noun = armed.length === 1 ? 'track' : 'tracks';
     const audioArmed = armed.some((track) => track.kind === 'audio');
     const instrumentArmed = armed.some((track) => track.kind === 'instrument');
@@ -1650,16 +1682,24 @@ export class StudioEngine {
 
   trackWav(index: number): Blob | null {
     const track = this.tracks[index];
-    if (!track?.buffer) return null;
-    const left = track.buffer.getChannelData(0);
-    const right = track.buffer.numberOfChannels > 1 ? track.buffer.getChannelData(1) : left;
-    return encodeStereoWav(left, right, track.buffer.sampleRate);
+    if (!track || track.clips.length === 0) return null;
+    if (track.clips.length === 1) {
+      const buffer = track.clips[0]?.buffer;
+      if (!buffer) return null;
+      const left = buffer.getChannelData(0);
+      const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
+      return encodeStereoWav(left, right, buffer.sampleRate);
+    }
+    const rate = this.sampleRate();
+    const rendered = this.renderArranged(track, rate);
+    if (!rendered) return null;
+    return encodeStereoWav(rendered.left, rendered.right, rate);
   }
 
   mixWav(): { blob: Blob; silent: boolean; scaled: boolean } | null {
     const anySolo = this.tracks.some((track) => track.solo);
-    const audible = this.tracks.filter((track) => track.buffer && !track.muted && (!anySolo || track.solo));
-    const rate = audible[0]?.buffer?.sampleRate ?? this.sampleRate();
+    const audible = this.tracks.filter((track) => track.clips.length > 0 && !track.muted && (!anySolo || track.solo));
+    const rate = audible[0]?.clips[0]?.buffer.sampleRate ?? this.sampleRate();
     const parts: { left: Float32Array; right: Float32Array; gainL: number; gainR: number }[] = [];
     for (const track of audible) {
       const rendered = this.renderArranged(track, rate);
@@ -2263,18 +2303,13 @@ export class StudioEngine {
         const buffer = ctx.createBuffer(2, track.samples, ctx.sampleRate);
         buffer.copyToChannel(left, 0);
         buffer.copyToChannel(right, 1);
-        track.buffer = buffer;
-        track.name = 'Take';
-        track.clipBpm = null;
-        track.trimStart = 0;
-        track.trimEnd = 0;
-        track.fadeInBeats = 0;
-        track.fadeOutBeats = 0;
+        track.clips = [this.makeClip(buffer, { name: 'Take', bpm: null, startBeat: track.startBeat })];
         track.sessionSlot = null;
+        this.syncMirror(track);
         stored += 1;
       } else {
-        track.buffer = null;
-        track.peaks = [];
+        track.clips = [];
+        this.syncMirror(track);
       }
       track.chunksL = [];
       track.chunksR = [];
@@ -2297,13 +2332,14 @@ export class StudioEngine {
       track.chunksR = [];
       track.samples = 0;
       track.pending = false;
-      track.peaks = [];
-      track.buffer = null;
+      track.clips = [];
+      this.syncMirror(track);
     }
   }
 
   private clearTracks(): void {
     for (const track of this.tracks) {
+      track.clips = [];
       track.buffer = null;
       track.peaks = [];
       track.name = '';
@@ -2370,15 +2406,27 @@ export class StudioEngine {
       this.sources.push({ node: source, clipBpm: session.bpm, trackIndex: index });
       return;
     }
-    const buffer = track.buffer;
-    if (!buffer) return;
-    const clipStart = this.clipWallStart(track);
-    const clipEnd = clipStart + this.clipWallLength(track);
+    for (const clip of track.clips) this.spawnClip(track, clip, index, passWhen, regionStart, regionEnd);
+  }
+
+  private spawnClip(
+    track: Track,
+    clip: ArrangementClip,
+    index: number,
+    passWhen: number,
+    regionStart: number,
+    regionEnd: number,
+  ): void {
+    const ctx = this.ctx;
+    if (!ctx || !track.input) return;
+    const buffer = clip.buffer;
+    const clipStart = Math.max(0, clip.startBeat) * this.secondsPerBeat();
+    const clipEnd = clipStart + this.lengthSecOf(clip);
     const playFrom = Math.max(clipStart, regionStart);
     const playUntil = Math.min(clipEnd, regionEnd);
     if (playUntil - playFrom < 0.005) return;
-    const rate = this.clipRate(track);
-    const span = this.sourceSpan(track);
+    const rate = this.rateFor(clip.clipBpm);
+    const span = this.spanOf(clip);
     const into = Math.max(0, (playFrom - clipStart) * rate);
     const bufferOffset = Math.min(buffer.duration - 0.001, span.start + into);
     const duration = Math.min(Math.max(0.01, (playUntil - playFrom) * rate), Math.max(0, span.end - bufferOffset));
@@ -2392,7 +2440,7 @@ export class StudioEngine {
     fade.connect(track.input);
     const startTime = passWhen + (playFrom - regionStart);
     const endTime = startTime + (playUntil - playFrom);
-    this.scheduleFade(fade.gain, startTime, endTime, track.fadeInBeats * this.secondsPerBeat(), track.fadeOutBeats * this.secondsPerBeat());
+    this.scheduleFade(fade.gain, startTime, endTime, clip.fadeInBeats * this.secondsPerBeat(), clip.fadeOutBeats * this.secondsPerBeat());
     source.onended = () => {
       try {
         source.disconnect();
@@ -2410,7 +2458,7 @@ export class StudioEngine {
       }
       return;
     }
-    this.sources.push({ node: source, clipBpm: track.clipBpm, trackIndex: index });
+    this.sources.push({ node: source, clipBpm: clip.clipBpm, trackIndex: index });
   }
 
   private handoff(when: number): void {
@@ -2524,6 +2572,7 @@ export class StudioEngine {
         trimEnd: track.trimEnd,
         fadeInBeats: track.fadeInBeats,
         fadeOutBeats: track.fadeOutBeats,
+        arrangement: track.clips.map((clip) => ({ ...clip, peaks: clip.peaks.slice() })),
         sessionSlot: track.sessionSlot,
         volumeAuto: track.volumeAuto.map((point) => ({ ...point })),
         panAuto: track.panAuto.map((point) => ({ ...point })),
@@ -2567,15 +2616,8 @@ export class StudioEngine {
     entry.clips.forEach((clip, index) => {
       const track = this.tracks[index];
       if (!track) return;
-      track.buffer = clip.buffer;
-      track.peaks = clip.peaks.slice();
-      track.name = clip.name;
-      track.clipBpm = clip.clipBpm;
-      track.startBeat = clip.startBeat;
-      track.trimStart = clip.trimStart;
-      track.trimEnd = clip.trimEnd;
-      track.fadeInBeats = clip.fadeInBeats;
-      track.fadeOutBeats = clip.fadeOutBeats;
+      track.clips = (clip.arrangement ?? this.legacyArrangement(clip)).map((item) => ({ ...item, peaks: item.peaks.slice() }));
+      this.syncMirror(track);
       track.sessionSlot = clip.sessionSlot;
       track.volumeAuto = clip.volumeAuto.map((point) => ({ ...point }));
       track.panAuto = clip.panAuto.map((point) => ({ ...point }));
@@ -2594,67 +2636,179 @@ export class StudioEngine {
   }
 
   private trackDuration(track: Track): number {
-    return this.clipWallLength(track);
+    let end = 0;
+    if (track.pending && this.ctx) end = track.startBeat * this.secondsPerBeat() + track.samples / this.ctx.sampleRate;
+    for (const clip of track.clips) end = Math.max(end, clip.startBeat * this.secondsPerBeat() + this.lengthSecOf(clip));
+    return end;
   }
 
   private secondsPerBeat(): number {
     return 60 / Math.max(1, this.metroBpm);
   }
 
-  private clipRate(track: Track): number {
-    return track.clipBpm ? this.metroBpm / track.clipBpm : 1;
+  private rateFor(bpm: number | null): number {
+    return bpm ? this.metroBpm / bpm : 1;
   }
 
-  private clipWallStart(track: Track): number {
-    return Math.max(0, track.startBeat) * this.secondsPerBeat();
+  private spanOf(clip: ArrangementClip): { start: number; end: number } {
+    const end = clip.trimEnd > 0 ? Math.min(clip.buffer.duration, clip.trimEnd) : clip.buffer.duration;
+    const start = Math.min(Math.max(0, clip.trimStart), Math.max(0, end - 0.01));
+    return { start, end: Math.max(start + 0.01, end) };
   }
 
-  private clipWallLength(track: Track): number {
-    if (track.pending && this.ctx) return track.samples / this.ctx.sampleRate;
-    if (!track.buffer) return 0;
-    const span = this.sourceSpan(track);
-    return Math.max(0, span.end - span.start) / Math.max(0.001, this.clipRate(track));
+  private lengthSecOf(clip: ArrangementClip): number {
+    const span = this.spanOf(clip);
+    return Math.max(0, span.end - span.start) / Math.max(0.001, this.rateFor(clip.clipBpm));
+  }
+
+  private lengthBeatsOf(clip: ArrangementClip): number {
+    return this.lengthSecOf(clip) / this.secondsPerBeat();
+  }
+
+  private headClip(track: Track): ArrangementClip | null {
+    let best: ArrangementClip | null = null;
+    for (const clip of track.clips) {
+      if (!best || clip.startBeat < best.startBeat) best = clip;
+    }
+    return best;
+  }
+
+  private clipById(track: Track, clipId?: string): ArrangementClip | null {
+    if (clipId) return track.clips.find((clip) => clip.id === clipId) ?? null;
+    return this.headClip(track);
+  }
+
+  private makeClip(buffer: AudioBuffer, info: { name: string; bpm: number | null; startBeat?: number }): ArrangementClip {
+    const id = `c${this.clipSerial}`;
+    this.clipSerial += 1;
+    return {
+      id,
+      buffer,
+      peaks: computePeaks(buffer),
+      name: info.name,
+      clipBpm: info.bpm,
+      startBeat: Math.max(0, Math.min(256, info.startBeat ?? 0)),
+      trimStart: 0,
+      trimEnd: 0,
+      fadeInBeats: 0,
+      fadeOutBeats: 0,
+    };
+  }
+
+  /** Keep the single-clip fields aligned with the earliest clip so older readers stay honest. */
+  private syncMirror(track: Track): void {
+    const clip = this.headClip(track);
+    if (!clip) {
+      track.buffer = null;
+      track.peaks = [];
+      track.name = '';
+      track.clipBpm = null;
+      track.startBeat = 0;
+      track.trimStart = 0;
+      track.trimEnd = 0;
+      track.fadeInBeats = 0;
+      track.fadeOutBeats = 0;
+      return;
+    }
+    track.buffer = clip.buffer;
+    track.peaks = clip.peaks;
+    track.name = track.clips.length > 1 ? `${clip.name} +${track.clips.length - 1}` : clip.name;
+    track.clipBpm = clip.clipBpm;
+    track.startBeat = clip.startBeat;
+    track.trimStart = clip.trimStart;
+    track.trimEnd = clip.trimEnd;
+    track.fadeInBeats = clip.fadeInBeats;
+    track.fadeOutBeats = clip.fadeOutBeats;
+  }
+
+  private laneFor(track: Track): LaneClip[] {
+    if (track.pending && this.ctx) {
+      const duration = track.samples / this.ctx.sampleRate;
+      return [
+        {
+          id: 'pending',
+          name: 'Take',
+          startBeat: track.startBeat,
+          lengthBeats: duration / this.secondsPerBeat(),
+          duration,
+          peaks: track.peaks,
+          fadeInBeats: 0,
+          fadeOutBeats: 0,
+        },
+      ];
+    }
+    return track.clips.map((clip) => ({
+      id: clip.id,
+      name: clip.name,
+      startBeat: clip.startBeat,
+      lengthBeats: this.lengthBeatsOf(clip),
+      duration: this.lengthSecOf(clip),
+      peaks: clip.peaks,
+      fadeInBeats: clip.fadeInBeats,
+      fadeOutBeats: clip.fadeOutBeats,
+    }));
+  }
+
+  private legacyArrangement(clip: HistoryClip): ArrangementClip[] {
+    if (!clip.buffer) return [];
+    return [
+      {
+        id: `c${this.clipSerial++}`,
+        buffer: clip.buffer,
+        peaks: clip.peaks.slice(),
+        name: clip.name,
+        clipBpm: clip.clipBpm,
+        startBeat: clip.startBeat,
+        trimStart: clip.trimStart,
+        trimEnd: clip.trimEnd,
+        fadeInBeats: clip.fadeInBeats,
+        fadeOutBeats: clip.fadeOutBeats,
+      },
+    ];
   }
 
   private renderArranged(track: Track, sampleRate: number): { left: Float32Array; right: Float32Array } | null {
-    const buffer = track.buffer;
-    if (!buffer || sampleRate <= 0) return null;
-    const rate = Math.max(0.001, this.clipRate(track));
-    const span = this.sourceSpan(track);
-    const start = Math.max(0, Math.round(this.clipWallStart(track) * sampleRate));
-    const frames = Math.max(1, Math.ceil(((span.end - span.start) / rate) * sampleRate));
-    const left = new Float32Array(start + frames);
-    const right = new Float32Array(start + frames);
-    const srcL = buffer.getChannelData(0);
-    const srcR = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : srcL;
-    const srcRate = buffer.sampleRate;
-    const fadeIn = Math.min(frames, Math.round(track.fadeInBeats * this.secondsPerBeat() * sampleRate));
-    const fadeOut = Math.min(frames, Math.round(track.fadeOutBeats * this.secondsPerBeat() * sampleRate));
-    for (let i = 0; i < frames; i++) {
-      const index = Math.floor(span.start * srcRate + (i * rate * srcRate) / sampleRate);
-      if (index < 0 || index >= srcL.length) continue;
-      let gain = 1;
-      if (fadeIn > 1 && i < fadeIn) gain *= i / fadeIn;
-      if (fadeOut > 1 && i > frames - fadeOut) gain *= (frames - i) / fadeOut;
-      left[start + i] = (srcL[index] ?? 0) * gain;
-      right[start + i] = (srcR[index] ?? 0) * gain;
+    if (sampleRate <= 0 || track.clips.length === 0) return null;
+    let frames = 1;
+    const pieces = track.clips.map((clip) => {
+      const rate = Math.max(0.001, this.rateFor(clip.clipBpm));
+      const span = this.spanOf(clip);
+      const start = Math.max(0, Math.round(clip.startBeat * this.secondsPerBeat() * sampleRate));
+      const count = Math.max(1, Math.ceil(((span.end - span.start) / rate) * sampleRate));
+      frames = Math.max(frames, start + count);
+      return { clip, rate, span, start, count };
+    });
+    const left = new Float32Array(frames);
+    const right = new Float32Array(frames);
+    for (const piece of pieces) {
+      const srcL = piece.clip.buffer.getChannelData(0);
+      const srcR = piece.clip.buffer.numberOfChannels > 1 ? piece.clip.buffer.getChannelData(1) : srcL;
+      const srcRate = piece.clip.buffer.sampleRate;
+      const fadeIn = Math.min(piece.count, Math.round(piece.clip.fadeInBeats * this.secondsPerBeat() * sampleRate));
+      const fadeOut = Math.min(piece.count, Math.round(piece.clip.fadeOutBeats * this.secondsPerBeat() * sampleRate));
+      for (let i = 0; i < piece.count; i++) {
+        const index = Math.floor(piece.span.start * srcRate + (i * piece.rate * srcRate) / sampleRate);
+        if (index < 0 || index >= srcL.length) continue;
+        let gain = 1;
+        if (fadeIn > 1 && i < fadeIn) gain *= i / fadeIn;
+        if (fadeOut > 1 && i > piece.count - fadeOut) gain *= (piece.count - i) / fadeOut;
+        left[piece.start + i] = (left[piece.start + i] ?? 0) + (srcL[index] ?? 0) * gain;
+        right[piece.start + i] = (right[piece.start + i] ?? 0) + (srcR[index] ?? 0) * gain;
+      }
     }
     return { left, right };
   }
 
   private clipSpansFor(track: Track): { startBeat: number; lengthBeats: number } {
-    return {
-      startBeat: track.startBeat,
-      lengthBeats: this.clipWallLength(track) / this.secondsPerBeat(),
-    };
-  }
-
-  private sourceSpan(track: Track): { start: number; end: number } {
-    const buffer = track.buffer;
-    if (!buffer) return { start: 0, end: 0 };
-    const end = track.trimEnd > 0 ? Math.min(buffer.duration, track.trimEnd) : buffer.duration;
-    const start = Math.min(Math.max(0, track.trimStart), Math.max(0, end - 0.01));
-    return { start, end: Math.max(start + 0.01, end) };
+    const lanes = this.laneFor(track);
+    if (lanes.length === 0) return { startBeat: 0, lengthBeats: 0 };
+    let start = Number.POSITIVE_INFINITY;
+    let end = 0;
+    for (const clip of lanes) {
+      start = Math.min(start, clip.startBeat);
+      end = Math.max(end, clip.startBeat + clip.lengthBeats);
+    }
+    return { startBeat: start, lengthBeats: Math.max(0, end - start) };
   }
 
   private sessionBuffer(track: Track): { buffer: AudioBuffer; bpm: number | null } | null {
@@ -2857,6 +3011,21 @@ export class StudioEngine {
         trimEnd: track.trimEnd,
         fadeInBeats: track.fadeInBeats,
         fadeOutBeats: track.fadeOutBeats,
+        arrangement: track.clips.map((clip) => {
+          const stored = bufferToStored(clip.buffer);
+          if (!stored) return null;
+          const item: StoredArrangementClip = {
+            name: clip.name,
+            bpm: clip.clipBpm,
+            startBeat: clip.startBeat,
+            trimStart: clip.trimStart,
+            trimEnd: clip.trimEnd,
+            fadeInBeats: clip.fadeInBeats,
+            fadeOutBeats: clip.fadeOutBeats,
+            clip: stored,
+          };
+          return item;
+        }).filter((item): item is StoredArrangementClip => item !== null),
         volumeAuto: track.volumeAuto.map((point) => ({ ...point })),
         panAuto: track.panAuto.map((point) => ({ ...point })),
         fxAuto: track.fxAuto.map((point) => ({ ...point })),
@@ -2920,8 +3089,8 @@ export class StudioEngine {
       track.panAuto = stored.panAuto.map((point) => ({ ...point }));
       track.fxAuto = stored.fxAuto.map((point) => ({ ...point }));
       track.sessionSlot = stored.sessionSlot;
-      track.buffer = stored.clip ? storedToBuffer(ctx, stored.clip) : null;
-      track.peaks = track.buffer ? computePeaks(track.buffer) : [];
+      track.clips = this.clipsFromStored(ctx, stored);
+      this.syncMirror(track);
       track.pending = false;
       track.chunksL = [];
       track.chunksR = [];
@@ -2949,23 +3118,72 @@ export class StudioEngine {
     this.applyAll();
   }
 
+  private clipsFromStored(ctx: AudioContext, stored: StoredProject['tracks'][number]): ArrangementClip[] {
+    const saved = stored.arrangement;
+    if (saved && saved.length > 0) {
+      const clips: ArrangementClip[] = [];
+      for (const item of saved) {
+        const buffer = storedToBuffer(ctx, item.clip);
+        if (!buffer) continue;
+        clips.push({
+          id: `c${this.clipSerial++}`,
+          buffer,
+          peaks: computePeaks(buffer),
+          name: item.name,
+          clipBpm: item.bpm,
+          startBeat: Math.max(0, item.startBeat),
+          trimStart: Math.max(0, item.trimStart),
+          trimEnd: Math.max(0, item.trimEnd),
+          fadeInBeats: Math.max(0, item.fadeInBeats),
+          fadeOutBeats: Math.max(0, item.fadeOutBeats),
+        });
+      }
+      return clips;
+    }
+    if (!stored.clip) return [];
+    const buffer = storedToBuffer(ctx, stored.clip);
+    if (!buffer) return [];
+    return [
+      {
+        id: `c${this.clipSerial++}`,
+        buffer,
+        peaks: computePeaks(buffer),
+        name: stored.name,
+        clipBpm: stored.clipBpm,
+        startBeat: Math.max(0, stored.startBeat),
+        trimStart: Math.max(0, stored.trimStart),
+        trimEnd: Math.max(0, stored.trimEnd),
+        fadeInBeats: Math.max(0, stored.fadeInBeats),
+        fadeOutBeats: Math.max(0, stored.fadeOutBeats),
+      },
+    ];
+  }
+
   private async renderOffline(stemIndex?: number): Promise<AudioBuffer | null> {
     const anySolo = this.tracks.some((track) => track.solo);
     const tracks = [];
     for (let index = 0; index < this.tracks.length; index += 1) {
       const track = this.tracks[index];
-      if (!track?.buffer) continue;
+      if (!track || track.clips.length === 0 || !this.ctx) continue;
       if (stemIndex !== undefined && stemIndex !== index) continue;
       if (stemIndex === undefined && (track.muted || (anySolo && !track.solo))) continue;
-      const span = this.sourceSpan(track);
+      const mixed = this.renderArranged(track, this.sampleRate());
+      if (!mixed) continue;
+      const buffer = this.ctx.createBuffer(2, mixed.left.length, this.sampleRate());
+      const left = new Float32Array(new ArrayBuffer(mixed.left.byteLength));
+      const right = new Float32Array(new ArrayBuffer(mixed.right.byteLength));
+      left.set(mixed.left);
+      right.set(mixed.right);
+      buffer.copyToChannel(left, 0);
+      buffer.copyToChannel(right, 1);
       tracks.push({
-        buffer: track.buffer,
-        rate: this.clipRate(track),
-        startSec: this.clipWallStart(track),
-        trimStart: span.start,
-        trimEnd: span.end,
-        fadeInSec: track.fadeInBeats * this.secondsPerBeat(),
-        fadeOutSec: track.fadeOutBeats * this.secondsPerBeat(),
+        buffer,
+        rate: 1,
+        startSec: 0,
+        trimStart: 0,
+        trimEnd: buffer.duration,
+        fadeInSec: 0,
+        fadeOutSec: 0,
         gain: dbToGain(track.gainDb),
         pan: track.pan,
         mono: track.mono,
@@ -3060,6 +3278,7 @@ function blankTrack(index: number): Track {
     clipBpm: null,
     buffer: null,
     peaks: [],
+    clips: [],
     chunksL: [],
     chunksR: [],
     samples: 0,
