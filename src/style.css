@@ -22,7 +22,7 @@ html, body {
   color: var(--text);
 }
 
-body { min-width: 1180px; }
+body { min-width: 0; }
 
 button, input, select { font: inherit; color: inherit; }
 
@@ -102,7 +102,7 @@ button { cursor: pointer; }
   font-weight: 650;
 }
 
-.transport { justify-content: space-between; }
+.transport { justify-content: space-between; flex-wrap: wrap; }
 
 .transport-buttons, .row, .metro, .track-toggles {
   display: flex;
@@ -347,7 +347,7 @@ select {
 
 .track {
   display: grid;
-  grid-template-columns: 64px 116px 120px minmax(180px, 1fr) 72px 64px;
+  grid-template-columns: 96px 116px minmax(116px, 150px) 14px minmax(120px, 1fr) 62px auto;
   gap: 8px;
   align-items: center;
   background: #161b22;
@@ -357,7 +357,42 @@ select {
   padding: 8px;
 }
 
+.track.is-target { box-shadow: inset 0 0 0 1px var(--amber); }
+.track.is-drop { border-color: var(--amber); }
+
 .track-name { font-size: 12px; letter-spacing: 0.08em; color: var(--track); }
+.track-id { min-width: 0; }
+.track-clip, .sample-meta, .library-target, .loop-label {
+  color: var(--dim);
+  font-size: 11px;
+}
+.track-clip {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-mix { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.track-actions { display: flex; gap: 4px; }
+
+.mini-meter {
+  width: 10px;
+  height: 52px;
+  background: #0c0e12;
+  border: 1px solid #2c3340;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  justify-self: center;
+}
+.mini-meter-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: linear-gradient(to top, #1f8a4c 0%, #b6d63a 55%, #f0a202 78%, #e23b3b 100%);
+}
 .track-level { display: flex; flex-direction: column; gap: 2px; }
 .track-level input { width: 100%; accent-color: var(--amber); }
 
@@ -377,6 +412,117 @@ select {
 }
 
 .footer { color: var(--dim); font-size: 12px; line-height: 1.45; }
+
+.bars {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: #ffb020;
+  text-align: right;
+}
+
+.loop-input {
+  width: 64px;
+  background: #0e1114;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.library-head, .library-cats, .library-actions, .pads {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.library-head { justify-content: space-between; }
+.library-head h2 { margin: 0; }
+.library-cats, .pads, .sample-grid { margin-top: 10px; }
+
+.sample-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.sample-chip, .pad {
+  text-align: left;
+  border: 1px solid #4a5362;
+  background: #12171e;
+  border-radius: 8px;
+  min-height: 52px;
+  padding: 8px 10px;
+}
+
+.sample-chip { display: flex; flex-direction: column; gap: 2px; }
+.sample-name { font-size: 13px; }
+.sample-chip.on, .pad.is-drop { border-color: var(--amber); color: var(--amber); }
+
+.pad {
+  min-width: 88px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.pad:active, .piano-black.is-down { background: #3a3324; }
+.piano-white.is-down { background: #d7c7a1; }
+
+.keys-wrap { margin-top: 4px; overflow-x: auto; }
+.piano {
+  position: relative;
+  display: flex;
+  height: 92px;
+  min-width: 420px;
+  user-select: none;
+  touch-action: none;
+}
+.piano-white, .piano-black { border: 1px solid #2a3038; padding: 0; }
+.piano-white {
+  flex: 1;
+  height: 100%;
+  background: #f3efe6;
+  color: #1c2128;
+  border-radius: 0 0 6px 6px;
+  font-size: 11px;
+  align-self: flex-end;
+}
+.piano-black {
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 54px;
+  margin-left: -14px;
+  background: #161b22;
+  border-radius: 0 0 4px 4px;
+  z-index: 1;
+}
+
+.credits { margin-top: 8px; color: var(--dim); font-size: 13px; }
+.credits summary { cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; }
+.credits p { margin: 8px 0 0; line-height: 1.45; }
+
+@media (max-width: 1180px) {
+  .console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .deck { flex-direction: column; }
+  .master { width: auto; align-self: stretch; }
+}
+
+@media (max-width: 860px) {
+  .track {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .wave { flex: 1 1 180px; height: 56px; }
+  .track-mix { flex: 1 1 140px; }
+  .topbar { flex-wrap: wrap; }
+  .clock { font-size: 24px; }
+}
+
+@media (max-width: 720px) {
+  .console { grid-template-columns: 1fr; }
+  .app { padding: 12px; }
+}
 
 .sr-only {
   position: absolute;

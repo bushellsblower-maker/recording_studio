@@ -1,0 +1,250 @@
+{
+  "name": "RS-4 Session Kit",
+  "license": "CC0-1.0",
+  "defaultBpm": 100,
+  "samples": [
+    {
+      "id": "kick",
+      "name": "Kick",
+      "category": "Drums",
+      "kind": "oneshot",
+      "file": "drums/kick.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "snare",
+      "name": "Snare",
+      "category": "Drums",
+      "kind": "oneshot",
+      "file": "drums/snare.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "hat",
+      "name": "Hat closed",
+      "category": "Drums",
+      "kind": "oneshot",
+      "file": "drums/hat.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "hat-open",
+      "name": "Hat half-open",
+      "category": "Drums",
+      "kind": "oneshot",
+      "file": "drums/hat-open.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "house",
+      "name": "House groove",
+      "category": "Drums",
+      "kind": "loop",
+      "file": "drums/house.wav",
+      "bpm": 100,
+      "bars": 2
+    },
+    {
+      "id": "halftime",
+      "name": "Half-time",
+      "category": "Drums",
+      "kind": "loop",
+      "file": "drums/halftime.wav",
+      "bpm": 100,
+      "bars": 2
+    },
+    {
+      "id": "stick",
+      "name": "Cross-stick",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/stick.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "rim",
+      "name": "Rimshot",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/rim.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "tom-hi",
+      "name": "Tom high",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/tom-hi.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "tom-lo",
+      "name": "Tom low",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/tom-lo.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "ride",
+      "name": "Ride bell",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/ride.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "shaker",
+      "name": "Shaker",
+      "category": "Perc",
+      "kind": "oneshot",
+      "file": "perc/shaker.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "perc-loop",
+      "name": "Perc loop",
+      "category": "Perc",
+      "kind": "loop",
+      "file": "perc/perc-loop.wav",
+      "bpm": 100,
+      "bars": 2
+    },
+    {
+      "id": "bass-c",
+      "name": "Bass C",
+      "category": "Bass",
+      "kind": "oneshot",
+      "file": "bass/c.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "bass-eb",
+      "name": "Bass Eb",
+      "category": "Bass",
+      "kind": "oneshot",
+      "file": "bass/eb.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "bass-f",
+      "name": "Bass F",
+      "category": "Bass",
+      "kind": "oneshot",
+      "file": "bass/f.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "bass-g",
+      "name": "Bass G",
+      "category": "Bass",
+      "kind": "oneshot",
+      "file": "bass/g.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "bass-bb",
+      "name": "Bass Bb",
+      "category": "Bass",
+      "kind": "oneshot",
+      "file": "bass/bb.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "bass-loop",
+      "name": "Bass loop",
+      "category": "Bass",
+      "kind": "loop",
+      "file": "bass/bass-loop.wav",
+      "bpm": 100,
+      "bars": 2
+    },
+    {
+      "id": "key-c",
+      "name": "Key C",
+      "category": "Keys",
+      "kind": "oneshot",
+      "file": "keys/c.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "key-eb",
+      "name": "Key Eb",
+      "category": "Keys",
+      "kind": "oneshot",
+      "file": "keys/eb.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "key-g",
+      "name": "Key G",
+      "category": "Keys",
+      "kind": "oneshot",
+      "file": "keys/g.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "key-bb",
+      "name": "Key Bb",
+      "category": "Keys",
+      "kind": "oneshot",
+      "file": "keys/bb.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "chord",
+      "name": "Chord stab",
+      "category": "Keys",
+      "kind": "oneshot",
+      "file": "keys/chord.wav",
+      "bpm": null,
+      "bars": null
+    },
+    {
+      "id": "pad",
+      "name": "Pad loop",
+      "category": "Keys",
+      "kind": "loop",
+      "file": "keys/pad.wav",
+      "bpm": 100,
+      "bars": 2
+    },
+    {
+      "id": "rise",
+      "name": "Rise",
+      "category": "FX",
+      "kind": "oneshot",
+      "file": "fx/rise.wav",
+      "bpm": 100,
+      "bars": 1
+    },
+    {
+      "id": "wash",
+      "name": "Wash",
+      "category": "FX",
+      "kind": "loop",
+      "file": "fx/wash.wav",
+      "bpm": 100,
+      "bars": 2
+    }
+  ]
+}

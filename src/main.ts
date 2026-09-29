@@ -1,9 +1,11 @@
 import './style.css';
 import { StudioEngine } from './audio/engine';
+import { SampleBank, type SampleMeta } from './audio/library';
 import type { ConsoleView } from './ui/view';
 import { buildView } from './ui/view';
 
 const api: { engine?: StudioEngine; view?: ConsoleView } = {};
+const bank = new SampleBank();
 
 api.engine = new StudioEngine({
   onStatus: (message) => api.view?.setStatus(message),
@@ -72,6 +74,13 @@ api.view = buildView({
   trackMuted: (index, muted) => api.engine?.setTrackMuted(index, muted),
   trackSolo: (index, solo) => api.engine?.setTrackSolo(index, solo),
   trackDb: (index, db) => api.engine?.setTrackDb(index, db),
+  trackPan: (index, pan) => api.engine?.setTrackPan(index, pan),
+  trackImport: (index, file) => {
+    void file.arrayBuffer().then((data) => api.engine?.importEncoded(index, data, file.name));
+  },
+  trackDropSample: (index, sampleId) => {
+    void placeSample(sampleId, index);
+  },
   downloadTrack: (index) => {
     const blob = api.engine?.trackWav(index);
     if (!blob) {
@@ -90,8 +99,24 @@ api.view = buildView({
     saveBlob(mix.blob, 'rs4-mixdown.wav');
     if (mix.silent) api.view?.setStatus('Mixdown downloaded, but it looks silent.');
     else if (mix.scaled) api.view?.setStatus('Mixdown downloaded and scaled so the sum does not clip.');
-    else api.view?.setStatus('Mixdown downloaded. It uses track levels, mute, solo, and the master fader.');
+    else api.view?.setStatus('Mixdown downloaded. It uses track levels, pan, mute, solo, and the master fader.');
   },
+  undo: () => api.engine?.undo(),
+  loop: (on) => api.engine?.setLoop(on),
+  loopStart: (bar) => api.engine?.setLoopStartBar(bar),
+  loopBars: (bars) => api.engine?.setLoopBars(bars),
+  previewSample: (id) => {
+    void withSample(id, (_meta, buffer) => api.engine?.previewBuffer(buffer));
+  },
+  loadSample: (id) => {
+    const index = api.view?.targetTrack() ?? 0;
+    void placeSample(id, index);
+  },
+  triggerSample: (id) => {
+    void withSample(id, (_meta, buffer) => api.engine?.triggerBuffer(buffer, api.view?.quantizeOn() ?? true));
+  },
+  noteOn: (midi) => api.engine?.noteOn(midi),
+  noteOff: (midi) => api.engine?.noteOff(midi),
 });
 
 const view = api.view;
@@ -100,8 +125,12 @@ const root = document.querySelector('#app');
 if (!root) throw new Error('Missing #app');
 root.replaceChildren(view.element);
 view.setStatus(
-  'Press Power to start audio. Track 1 is armed and the tone generator is the default input. Record, then play. Raise MONITOR only to audition the live chain — it starts off so a mic cannot feed back.',
+  'Press Power, then preview the sample library or arm a track and record. Pads quantize while the transport runs. Raise MONITOR only to audition the live chain — it starts off so a mic cannot feed back.',
 );
+void bank
+  .load()
+  .then(() => view.setCatalog(bank.metas))
+  .catch(() => view.catalogFailed('The sample library did not load. Recording and the tone generator still work.'));
 view.render(engine.snapshot());
 
 function loop(): void {
@@ -111,9 +140,12 @@ function loop(): void {
     ...engine.levels(),
     position: clock.seconds,
     clockLabel: clock.label,
+    bar: clock.bar,
+    beat: clock.beat,
     sessionLength: engine.sessionLength(),
     durations: engine.durations(),
     peaks: engine.peaks(),
+    trackLevels: engine.trackMeters(),
     recording: engine.modeName() === 'recording',
     playing: engine.modeName() === 'playing',
     suspended: engine.contextState() === 'suspended',
@@ -126,7 +158,7 @@ window.addEventListener('keydown', (event) => {
   const target = event.target;
   if (target instanceof HTMLElement) {
     const tag = target.tagName;
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
   }
   if (event.code === 'Space') {
     event.preventDefault();
@@ -142,6 +174,37 @@ window.addEventListener('keydown', (event) => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') engine.resume();
 });
+
+async function withSample(id: string, use: (meta: SampleMeta, buffer: AudioBuffer) => void): Promise<void> {
+  const engine = api.engine;
+  const view = api.view;
+  if (!engine || !view) return;
+  const meta = bank.meta(id);
+  if (!meta) {
+    view.setStatus('That sample is not in the library.');
+    return;
+  }
+  await engine.powerOn();
+  const ctx = engine.audioContext();
+  if (!ctx) return;
+  try {
+    const buffer = await bank.buffer(ctx, meta);
+    use(meta, buffer);
+  } catch {
+    view.setStatus(`Could not decode ${meta.name}.`);
+  }
+}
+
+async function placeSample(id: string, index: number): Promise<void> {
+  await withSample(id, (meta, buffer) => {
+    const engine = api.engine;
+    const view = api.view;
+    if (!engine || !view) return;
+    const tempo = meta.kind === 'loop' ? meta.bpm : null;
+    if (tempo) view.setBpm(tempo);
+    engine.loadClip(index, buffer, { name: meta.name, bpm: tempo });
+  });
+}
 
 function saveBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

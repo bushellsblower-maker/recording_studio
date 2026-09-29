@@ -1,4 +1,4 @@
-export const TRACK_COUNT = 4;
+export const TRACK_COUNT = 8;
 
 export type InputMode = 'mic' | 'tone' | 'both';
 
@@ -14,6 +14,7 @@ export interface TrackSnapshot {
   solo: boolean;
   hasAudio: boolean;
   duration: number;
+  name: string;
 }
 
 export interface EngineSnapshot {
@@ -29,6 +30,8 @@ export interface EngineSnapshot {
   inputSolo: boolean;
   masterMute: boolean;
   metroOn: boolean;
+  loopOn: boolean;
+  canUndo: boolean;
 }
 
 export interface Levels {

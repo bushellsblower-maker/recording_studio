@@ -1,6 +1,6 @@
 # RS-4 Recording Studio
 
-A browser recording console. It uses the Web Audio API for a live microphone or a built-in tone generator, a real insert chain, four overdub tracks, and 16-bit WAV download.
+A browser recording console. It uses the Web Audio API for a live microphone, a built-in tone generator, or the bundled CC0 sample library, a real insert chain, eight overdub tracks, and 16-bit WAV download.
 
 Live site: **https://recstudio.cybush.uk** (Cloudflare Worker `recording-studio`). The microphone works there because the custom domain is HTTPS.
 
@@ -15,12 +15,15 @@ Open the local URL Vite prints. Click **Power** before using the transport.
 
 ### Without a microphone
 
-Track 1 starts armed and the input is the tone generator.
+Track 1 starts armed. The tone generator is the default input, and a CC0 session kit is built in.
 
 1. Press **Power**.
-2. Press **Record**, then **Stop**.
-3. Press **Play**. The take comes back through the master even if the monitor is down.
-4. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
+2. In **Sample library**, click a loop to preview it, then **Load on track** (or drag it onto a track). Loops are 100 BPM and set the click to match.
+3. Press **Play**. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded.
+4. Press **Record**, then **Stop**, to print the armed tracks. **Undo** restores the previous take.
+5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
+
+The on-screen keys (or A–K on the computer keyboard) play a simple synth through the master. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
 
 ### With a microphone
 
@@ -29,7 +32,7 @@ Track 1 starts armed and the input is the tone generator.
 3. Leave **Monitor** down unless you are wearing headphones.
 4. Arm a track and press **Record**. Tracks that are not armed play back underneath the new take.
 
-Space plays or stops. R records. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it.
+Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **LOOP** repeats a bar region (1, 2, 4, or 8 bars) and, when recording, ends the take at the end of that region.
 
 Check the project with:
 
@@ -58,19 +61,25 @@ mic and/or tone
              |-> reverb send -> convolver -> master
 playback tracks -> mute/solo -> master sum
 metronome (cue only) -------> master sum
+sample pads and keys -------> master sum, and the record tap while a take is running
 master fader -> stereo meters -> safety limiter -> mute -> speakers
 ```
 
-What you record is the channel after the inserts, fader, and pan. Monitor level does not change the take, so you can record with the monitor off. Delay and reverb are monitor sends and are not in the track files. The mixdown WAV sums the printed tracks using track levels, mute, solo, and the master fader. It is scaled only if the sum would clip.
+What you record is the channel after the inserts, fader, and pan, plus any pads or keys you play during the take. Monitor level does not change the take, so you can record with the monitor off. Delay and reverb are monitor sends and are not in the track files. The mixdown WAV sums the printed tracks using track levels, pan, mute, solo, and the master fader. It is scaled only if the sum would clip.
+
+## Sample library
+
+The playable kit lives in `public/samples/` and is served with the site. Drum one-shots are trimmed excerpts of [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) (CC0) performed by Austin McMahon. The loops sequence those hits. Bass, keys, shaker, and FX are original synthesis dedicated to CC0 for this project. Names, files, and licenses are in `public/samples/ATTRIBUTION.md` and under **Sample credits** in the console. Rebuild the pack with `python3 scripts/build-session-kit.py` if you have `ffmpeg`.
 
 ## Limits
 
 - One browser input (the default microphone). There is no multi-interface routing.
 - Output latency is the browser and device latency. Speakers plus a live monitor can howl; the monitor starts off and warns when you raise it.
-- Track audio is 32-bit float in memory and 16-bit stereo PCM on disk. A few minutes on four tracks is hundreds of megabytes.
-- The metronome is a cue. It is not recorded.
-- Armed tracks all receive the same stereo channel. Arm state is locked while the transport is recording.
-- Overdub replaces the armed tracks from the top. Other tracks play from the start in time with the new take.
+- Track audio is 32-bit float in memory and 16-bit stereo PCM on disk. A few minutes on eight tracks is hundreds of megabytes.
+- The metronome is a cue. It is not recorded. Library loops are 100 BPM and follow the session tempo (pitch follows the click).
+- Armed tracks all receive the same stereo channel, including pad and key hits played while recording. Arm state is locked while the transport is recording.
+- Overdub replaces the armed tracks from the top. Other tracks play from the start in time with the new take. **Undo** restores the clips from before the last record, load, import, or reset.
+- **LOOP** repeats playback across the chosen bars. A recorded take still runs once and stops at the end of the region.
 - The master path includes a transparent safety limiter after the meters. It only catches overs.
 - If `AudioWorklet` fails to load, the gate is bypassed and recording falls back to `ScriptProcessorNode`.
 - This is a front-end app. Nothing is uploaded.

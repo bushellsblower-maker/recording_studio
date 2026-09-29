@@ -11,7 +11,7 @@ export function concatFloat32(chunks: readonly Float32Array[], length: number): 
 }
 
 export function sumStereo(
-  parts: readonly { left: Float32Array; right: Float32Array; gain: number }[],
+  parts: readonly { left: Float32Array; right: Float32Array; gainL: number; gainR: number }[],
 ): { left: Float32Array; right: Float32Array; peak: number; scaled: boolean } {
   let frames = 0;
   for (const part of parts) {
@@ -22,8 +22,8 @@ export function sumStereo(
   for (const part of parts) {
     const count = Math.min(part.left.length, part.right.length, frames);
     for (let i = 0; i < count; i++) {
-      left[i] += part.left[i] * part.gain;
-      right[i] += part.right[i] * part.gain;
+      left[i] += part.left[i] * part.gainL;
+      right[i] += part.right[i] * part.gainR;
     }
   }
   let peak = 0;
