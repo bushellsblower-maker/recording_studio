@@ -95,6 +95,10 @@ export interface ConsoleHandlers {
   removeMarker: (id: string) => void;
   locate: (beat: number) => void;
   editClipEdge: (index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number, clipId?: string) => void;
+  deleteClip: (index: number, clipId: string) => void;
+  copyClip: (index: number, clipId: string) => boolean;
+  pasteClip: (index: number, beat: number) => string | null;
+  duplicateClip: (index: number, clipId: string) => string | null;
   setInsert: (track: number, slot: number, kind: PluginKind | null) => void;
   moveInsert: (track: number, from: number, to: number) => void;
   bypassInsert: (track: number, slot: number, bypass: boolean) => void;
@@ -633,6 +637,160 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   });
   trackList.append(ruler);
 
+  let selected: { index: number; id: string } | null = null;
+  let canPaste = false;
+  let pasteBeat = 0;
+  const clipTools = document.createElement('div');
+  clipTools.className = 'clip-tools';
+  const duplicateBtn = button('Duplicate', 'btn tiny clip-tool');
+  duplicateBtn.title = 'Copy the selected clip onto the same track, starting when it ends. Ctrl or Cmd D.';
+  const copyBtn = button('Copy', 'btn tiny clip-tool');
+  copyBtn.title = 'Copy the selected clip. Ctrl or Cmd C.';
+  const pasteBtn = button('Paste', 'btn tiny clip-tool');
+  pasteBtn.title = 'Paste the copied clip on this track at the cue. Ctrl or Cmd V. Right-click a lane to paste at that beat.';
+  const deleteBtn = button('Delete', 'btn tiny clip-tool');
+  deleteBtn.title = 'Remove the selected clip. Delete or Backspace.';
+  clipTools.append(duplicateBtn, copyBtn, pasteBtn, deleteBtn);
+
+  const clipMenu = document.createElement('div');
+  clipMenu.className = 'clip-menu';
+  clipMenu.hidden = true;
+  clipMenu.setAttribute('role', 'menu');
+  document.body.append(clipMenu);
+
+  function liveSelection(): { index: number; id: string } | null {
+    if (!selected) return null;
+    const lane = lanes[selected.index] ?? [];
+    return lane.some((clip) => clip.id === selected?.id) ? selected : null;
+  }
+
+  function syncClipTools(): void {
+    const live = liveSelection();
+    const locked = last?.mode === 'recording' || last?.mode === 'stopping';
+    duplicateBtn.disabled = !live || locked;
+    copyBtn.disabled = !live || locked;
+    deleteBtn.disabled = !live || locked;
+    pasteBtn.disabled = !canPaste || locked;
+  }
+
+  function rememberClip(index: number, id: string | null): void {
+    if (!id) return;
+    selected = { index, id };
+    syncClipTools();
+  }
+
+  function closeClipMenu(): void {
+    clipMenu.hidden = true;
+    clipMenu.replaceChildren();
+  }
+
+  function menuItem(label: string, action: () => void, enabled = true): HTMLButtonElement {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'clip-menu-item';
+    item.setAttribute('role', 'menuitem');
+    item.textContent = label;
+    item.disabled = !enabled;
+    item.addEventListener('click', () => {
+      closeClipMenu();
+      action();
+    });
+    return item;
+  }
+
+  function openClipMenu(x: number, y: number, index: number, beat: number, clip: LaneClip | null): void {
+    closeClipMenu();
+    chooseTrack(index);
+    if (clip) {
+      selected = { index, id: clip.id };
+      setStatus(`${clip.name} selected. Drag the middle to move it. Drag either bright edge to trim. Delete removes it.`);
+    }
+    syncClipTools();
+    const locked = last?.mode === 'recording' || last?.mode === 'stopping';
+    if (clip) {
+      clipMenu.append(
+        menuItem('Duplicate', () => rememberClip(index, handlers.duplicateClip(index, clip.id)), !locked),
+        menuItem('Copy', () => {
+          canPaste = handlers.copyClip(index, clip.id) || canPaste;
+          syncClipTools();
+        }, !locked),
+        menuItem('Delete', () => handlers.deleteClip(index, clip.id), !locked),
+      );
+    }
+    clipMenu.append(menuItem('Paste here', () => rememberClip(index, handlers.pasteClip(index, beat)), canPaste && !locked));
+    clipMenu.hidden = false;
+    const margin = 8;
+    const left = Math.max(margin, Math.min(x, window.innerWidth - 188));
+    const top = Math.max(margin, Math.min(y, window.innerHeight - clipMenu.childElementCount * 44 - margin));
+    clipMenu.style.left = `${left}px`;
+    clipMenu.style.top = `${top}px`;
+    const first = clipMenu.querySelector('button:not(:disabled)');
+    if (first instanceof HTMLElement) first.focus();
+  }
+
+  duplicateBtn.addEventListener('click', () => {
+    const live = liveSelection();
+    if (!live) return;
+    rememberClip(live.index, handlers.duplicateClip(live.index, live.id));
+  });
+  copyBtn.addEventListener('click', () => {
+    const live = liveSelection();
+    if (!live) return;
+    canPaste = handlers.copyClip(live.index, live.id) || canPaste;
+    syncClipTools();
+  });
+  pasteBtn.addEventListener('click', () => {
+    const index = liveSelection()?.index ?? targetTrack;
+    rememberClip(index, handlers.pasteClip(index, pasteBeat));
+  });
+  deleteBtn.addEventListener('click', () => {
+    const live = liveSelection();
+    if (!live) return;
+    handlers.deleteClip(live.index, live.id);
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (clipMenu.hidden) return;
+    const target = event.target;
+    if (target instanceof Node && clipMenu.contains(target)) return;
+    closeClipMenu();
+  });
+  window.addEventListener('keydown', (event) => {
+    if (document.documentElement.classList.contains('help-open')) return;
+    if (typingTarget(event.target)) return;
+    if (!clipMenu.hidden && event.key === 'Escape') {
+      event.preventDefault();
+      closeClipMenu();
+      return;
+    }
+    const mod = event.metaKey || event.ctrlKey;
+    const live = liveSelection();
+    if ((event.key === 'Delete' || event.key === 'Backspace') && !mod && live) {
+      event.preventDefault();
+      event.stopPropagation();
+      handlers.deleteClip(live.index, live.id);
+      return;
+    }
+    if (mod && event.code === 'KeyC' && live) {
+      event.preventDefault();
+      event.stopPropagation();
+      canPaste = handlers.copyClip(live.index, live.id) || canPaste;
+      syncClipTools();
+      return;
+    }
+    if (mod && event.code === 'KeyV' && canPaste) {
+      event.preventDefault();
+      event.stopPropagation();
+      const index = live?.index ?? targetTrack;
+      rememberClip(index, handlers.pasteClip(index, pasteBeat));
+      return;
+    }
+    if (mod && event.code === 'KeyD' && live) {
+      event.preventDefault();
+      event.stopPropagation();
+      rememberClip(live.index, handlers.duplicateClip(live.index, live.id));
+    }
+  }, true);
+
   for (let index = 0; index < TRACK_COUNT; index++) {
     const rowEl = document.createElement('div');
     rowEl.className = 'track';
@@ -779,27 +937,68 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
     });
     canvas.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || event.ctrlKey) return;
+      closeClipMenu();
       if (last?.mode === 'recording' || last?.mode === 'stopping') return;
       const beat = beatFromClient(canvas, event.clientX);
       const clip = hitClip(lanes[index] ?? [], beat);
-      if (!clip || clip.id === 'pending') return;
+      if (!clip || clip.id === 'pending') {
+        selected = null;
+        syncClipTools();
+        return;
+      }
       const origin = dragBeats.get(clip.id) ?? clip.startBeat;
       const end = origin + clip.lengthBeats;
-      if (beat < origin - 0.05 || beat > end + 0.05) return;
-      const rect = canvas.getBoundingClientRect();
-      const edge = Math.max(0.2, (12 / Math.max(1, rect.width)) * viewSpan);
-      let mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' = 'move';
-      if (event.altKey) mode = beat < origin + clip.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
-      else if (beat <= origin + edge) mode = 'start';
-      else if (beat >= end - edge) mode = 'end';
+      if (beat < origin - 0.05 || beat > end + 0.05) {
+        selected = null;
+        syncClipTools();
+        return;
+      }
+      if (selected?.id !== clip.id || selected.index !== index) {
+        setStatus(`${clip.name} selected. Drag the middle to move it. Drag either bright edge to trim. Delete removes it. Duplicate places a copy after it.`);
+      }
+      selected = { index, id: clip.id };
+      chooseTrack(index);
+      syncClipTools();
+      const mode = clipDragMode(clip, beat, origin, end, event.altKey, canvas.getBoundingClientRect().width, viewSpan);
       dragging = { index, clipId: clip.id, origin, grab: beat - origin, mode };
+      canvas.style.cursor = mode === 'move' ? 'grabbing' : 'ew-resize';
       canvas.setPointerCapture(event.pointerId);
       event.preventDefault();
       event.stopPropagation();
     });
     canvas.addEventListener('pointermove', (event) => {
-      if (!dragging || dragging.index !== index || !canvas.hasPointerCapture(event.pointerId)) return;
-      if (dragging.mode === 'move') dragBeats.set(dragging.clipId, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, gridFine(event.shiftKey)));
+      if (dragging && dragging.index === index && canvas.hasPointerCapture(event.pointerId)) {
+        if (dragging.mode === 'move') dragBeats.set(dragging.clipId, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, gridFine(event.shiftKey)));
+        return;
+      }
+      if (dragging) return;
+      const beat = beatFromClient(canvas, event.clientX);
+      const clip = hitClip(lanes[index] ?? [], beat);
+      if (!clip || clip.id === 'pending') {
+        canvas.style.cursor = '';
+        return;
+      }
+      const origin = clip.startBeat;
+      const end = origin + clip.lengthBeats;
+      if (beat < origin - 0.05 || beat > end + 0.05) {
+        canvas.style.cursor = '';
+        return;
+      }
+      const mode = clipDragMode(clip, beat, origin, end, event.altKey, canvas.getBoundingClientRect().width, viewSpan);
+      canvas.style.cursor = mode === 'move' ? 'grab' : 'ew-resize';
+    });
+    canvas.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      const beat = beatFromClient(canvas, event.clientX);
+      const clip = hitClip(lanes[index] ?? [], beat);
+      openClipMenu(
+        event.clientX,
+        event.clientY,
+        index,
+        snapBeat(beat, gridFine(event.shiftKey)),
+        clip && clip.id !== 'pending' ? clip : null,
+      );
     });
     const finishDrag = (event: PointerEvent): void => {
       if (!dragging || dragging.index !== index) return;
@@ -808,6 +1007,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       const beat = mode === 'move' ? (dragBeats.get(clipId) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), gridFine(event.shiftKey));
       dragging = null;
       dragBeats.delete(clipId);
+      canvas.style.cursor = mode === 'move' ? 'grab' : 'ew-resize';
       if (mode === 'move') handlers.trackStart(index, beat, clipId);
       else handlers.editClipEdge(index, mode, beat, clipId);
       event.stopPropagation();
@@ -974,10 +1174,10 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   arrangeHead.className = 'zone-head';
   const arrangeTitle = document.createElement('h2');
   arrangeTitle.textContent = 'Arrangement';
-  arrangeHead.append(arrangeTitle);
+  arrangeHead.append(arrangeTitle, clipTools);
   const arrangeHint = document.createElement('p');
   arrangeHint.className = 'note';
-  arrangeHint.textContent = 'Drop sounds on a lane to add clips. Each clip is as wide as the sound is long. Drag a clip to move it. Drag the edges to trim, or hold Alt and drag an edge for a fade. Shift snaps to 16ths. Markers jump the cue; Alt-click a marker to remove it.';
+  arrangeHint.textContent = 'Click a clip to select it. Drag the middle to move it, and drag the bright edges to trim (Alt sets a fade). Delete removes it. Duplicate copies it to the end of itself. Copy, then Paste at the cue, or right-click a lane to paste at that beat.';
 
   const guide = document.createElement('ol');
   guide.className = 'guide';
@@ -1019,7 +1219,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   }
 
   const arrangeZone = document.createElement('section');
-  arrangeZone.className = 'zone zone-session';
+  arrangeZone.className = 'zone zone-session zone-arrange';
   attachCollapse(arrangeZone, arrangeHead, 'Arrangement');
   const devices = buildDevices({
     setInsert: handlers.setInsert,
@@ -1078,7 +1278,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Drop sounds on a lane to add clips; each bar matches the sound’s length. Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
+    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Click a clip to select it. Drag the middle to move it and the bright edges to trim. Delete removes it. Ctrl or Cmd D duplicates it. Ctrl or Cmd C copies it and V pastes at the cue. Right-click a lane to paste at that beat. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
   footer.append(footerSummary, footerCopy);
 
   const desk = document.createElement('div');
@@ -1296,6 +1496,8 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       rangeTo.max = String(max);
     }
     const playhead = frame.playing || frame.recording ? (frame.position * frame.bpm) / 60 : -1;
+    pasteBeat = playhead >= 0 ? playhead : (last?.cueBeat ?? 0);
+    syncClipTools();
     const strongRange = frame.looping || loopPreview !== null;
     viewSpan = Math.max(4, arrangeBeats / laneZoom);
     const focus = playhead >= 0 ? playhead : (last?.cueBeat ?? viewOrigin);
@@ -1341,6 +1543,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
         TRACK_COLORS[index] ?? '#e0a106',
         strongRange,
         (fades?.volumeAuto ?? []).map((point) => ({ beat: point.beat - origin, value: point.value })),
+        selected?.index === index ? selected.id : null,
       );
     });
   }
@@ -1607,6 +1810,28 @@ function drawRuler(
   paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
 }
 
+function clipDragMode(
+  clip: LaneClip,
+  beat: number,
+  origin: number,
+  end: number,
+  alt: boolean,
+  width: number,
+  viewBeats: number,
+): 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' {
+  const edge = Math.max(0.2, (14 / Math.max(1, width)) * viewBeats);
+  if (alt) return beat < origin + clip.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
+  if (beat <= origin + edge) return 'start';
+  if (beat >= end - edge) return 'end';
+  return 'move';
+}
+
+function typingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || target.isContentEditable;
+}
+
 function hitClip(clips: readonly LaneClip[], beat: number): LaneClip | null {
   let found: LaneClip | null = null;
   for (const clip of clips) {
@@ -1625,6 +1850,7 @@ function drawLane(
   color: string,
   strong = false,
   volume: readonly { beat: number; value: number }[] = [],
+  selectedId: string | null = null,
 ): void {
   const size = resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
@@ -1648,10 +1874,13 @@ function drawLane(
     if (clip.lengthBeats <= 0) continue;
     const x0 = (clip.startBeat / viewBeats) * size.width;
     const clipWidth = Math.max(1, (clip.lengthBeats / viewBeats) * size.width);
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    const picked = clip.id === selectedId;
+    ctx.fillStyle = picked ? 'rgba(244, 247, 251, 0.16)' : 'rgba(255,255,255,0.06)';
     ctx.fillRect(x0, 2, clipWidth, size.height - 4);
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = picked ? '#f4f7fb' : color;
+    ctx.lineWidth = picked ? 2 : 1;
     ctx.strokeRect(x0 + 0.5, 2.5, Math.max(0, clipWidth - 1), size.height - 5);
+    ctx.lineWidth = 1;
     if (clip.peaks.length > 0) {
       ctx.fillStyle = color;
       const columns = Math.max(1, Math.floor(clipWidth));
@@ -1692,6 +1921,16 @@ function drawLane(
     if (clip.lengthBeats <= 0) continue;
     const x0 = (clip.startBeat / viewBeats) * size.width;
     const clipWidth = Math.max(1, (clip.lengthBeats / viewBeats) * size.width);
+    if (clip.id === selectedId) {
+      ctx.fillStyle = '#f4f7fb';
+      if (clipWidth >= 10) {
+        const handle = Math.min(7, clipWidth * 0.18);
+        ctx.fillRect(x0, 2, handle, size.height - 4);
+        ctx.fillRect(x0 + clipWidth - handle, 2, handle, size.height - 4);
+      } else {
+        ctx.fillRect(x0, 2, clipWidth, size.height - 4);
+      }
+    }
     const full = `${clip.name} ${formatTime(clip.duration)}`;
     const timeOnly = formatTime(clip.duration);
     const nextX = clips
@@ -1700,7 +1939,8 @@ function drawLane(
     const gap = nextX - (x0 + clipWidth) - 6;
     const label = ctx.measureText(full).width + 8 <= Math.max(clipWidth, gap) ? full : timeOnly;
     const textW = ctx.measureText(label).width;
-    if (clipWidth >= textW + 8) ctx.fillText(label, x0 + 4, 3);
+    const inset = clip.id === selectedId && clipWidth >= 10 ? Math.min(7, clipWidth * 0.18) + 3 : 4;
+    if (clipWidth >= textW + inset + 4) ctx.fillText(label, x0 + inset, 3);
     else if (textW <= gap) ctx.fillText(label, x0 + clipWidth + 4, 3);
   }
   if (volume.length > 1) {
