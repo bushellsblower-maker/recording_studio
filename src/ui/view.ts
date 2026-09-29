@@ -113,6 +113,8 @@ export interface ConsoleView {
 
 const TRACK_COLORS = ['#e15a3a', '#e0a106', '#3cb7a0', '#6c8cff', '#d36ad6', '#7dcea0', '#f39c6b', '#8ecae6'];
 
+type ZoneName = 'arrange' | 'mix' | 'browse' | 'play';
+
 export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const element = document.createElement('div');
   element.className = 'app';
@@ -467,15 +469,14 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const rulerSig = document.createElement('span');
   rulerSig.className = 'track-time';
   rulerSig.textContent = '4/4';
-  ruler.append(
-    rulerLabel,
-    document.createElement('span'),
-    document.createElement('span'),
-    document.createElement('span'),
-    rulerCanvas,
-    rulerSig,
-    document.createElement('span'),
-  );
+  const rulerSkip = (label: string): HTMLSpanElement => {
+    const span = document.createElement('span');
+    span.className = 'ruler-skip';
+    span.setAttribute('aria-hidden', 'true');
+    span.dataset.slot = label;
+    return span;
+  };
+  ruler.append(rulerLabel, rulerSkip('toggles'), rulerSkip('mix'), rulerCanvas, rulerSig, rulerSkip('actions'));
   rulerCanvas.addEventListener('pointerdown', (event) => {
     if (last?.mode === 'recording' || last?.mode === 'stopping') return;
     rulerCanvas.setPointerCapture(event.pointerId);
@@ -512,7 +513,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     rowEl.style.setProperty('--track', TRACK_COLORS[index] ?? '#e0a106');
     const name = document.createElement('span');
     name.className = 'track-name';
-    name.textContent = `TRK ${index + 1}`;
+    name.textContent = index < 4 ? `Audio ${index + 1}` : `Inst ${index + 1}`;
     const clip = document.createElement('span');
     clip.className = 'track-clip';
     clip.textContent = 'empty';
@@ -520,6 +521,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     id.className = 'track-id';
     id.append(name, clip);
     const arm = button('ARM', 'btn tiny arm');
+    arm.setAttribute('aria-label', `Arm track ${index + 1}`);
     const mute = button('M', 'btn tiny');
     mute.setAttribute('aria-label', `Track ${index + 1} mute`);
     const solo = button('S', 'btn tiny');
@@ -562,9 +564,12 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       levelRead.textContent = formatDb(value);
       handlers.trackDb(index, value);
     });
+    const levelName = document.createElement('span');
+    levelName.className = 'mix-k';
+    levelName.textContent = 'Level';
     const levelWrap = document.createElement('label');
     levelWrap.className = 'track-level';
-    levelWrap.append(level, levelRead);
+    levelWrap.append(levelName, level, levelRead);
     const pan = document.createElement('input');
     pan.type = 'range';
     pan.min = String(RANGES.pan.min);
@@ -580,9 +585,12 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       panRead.textContent = formatPan(value);
       handlers.trackPan(index, value);
     });
+    const panName = document.createElement('span');
+    panName.className = 'mix-k';
+    panName.textContent = 'Pan';
     const panWrap = document.createElement('label');
     panWrap.className = 'track-level';
-    panWrap.append(pan, panRead);
+    panWrap.append(panName, pan, panRead);
     const mix = document.createElement('div');
     mix.className = 'track-mix';
     mix.append(levelWrap, panWrap);
@@ -591,6 +599,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     const meter = document.createElement('div');
     meter.className = 'mini-meter';
     meter.append(meterFill);
+    mix.append(meter);
     const canvas = document.createElement('canvas');
     canvas.className = 'wave';
     canvas.setAttribute('aria-hidden', 'true');
@@ -665,7 +674,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       dragging = null;
       dragBeats.delete(index);
     });
-    rowEl.append(id, toggles, mix, meter, canvas, time, actions);
+    rowEl.append(id, toggles, mix, canvas, time, actions);
     trackList.append(rowEl);
     tracks.push({ row: rowEl, arm, mute, solo, kind, clip, canvas, time, download, meterFill });
   }
@@ -712,20 +721,127 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   deck.className = 'deck';
   deck.append(trackList, masterPanel);
 
-  const stage = document.createElement('div');
-  stage.className = 'stage';
-  stage.append(consoleRow, deck);
+  const arrangeHead = document.createElement('div');
+  arrangeHead.className = 'zone-head';
+  const arrangeTitle = document.createElement('h2');
+  arrangeTitle.textContent = 'Arrangement';
+  const arrangeHint = document.createElement('p');
+  arrangeHint.className = 'note';
+  arrangeHint.textContent = 'Highlight a track, then place or drop a sound. Drag a clip to move it. Drag the bar ruler to set the loop. Audio 1–4 print the channel. Inst 5–8 print pads and keys.';
+  arrangeHead.append(arrangeTitle, arrangeHint);
 
-  const workspace = document.createElement('div');
-  workspace.className = 'workspace';
-  workspace.append(library.element, stage);
+  const guide = document.createElement('ol');
+  guide.className = 'guide';
+  const guideSteps: Array<{ zone: ZoneName; text: string }> = [
+    { zone: 'browse', text: 'Pick a sound' },
+    { zone: 'arrange', text: 'Place it on a track' },
+    { zone: 'arrange', text: 'Arm and record' },
+    { zone: 'mix', text: 'Mix and bounce' },
+  ];
+  guideSteps.forEach((step, index) => {
+    const item = document.createElement('li');
+    const jump = document.createElement('button');
+    jump.type = 'button';
+    jump.className = 'guide-step';
+    jump.textContent = `${index + 1}. ${step.text}`;
+    jump.addEventListener('click', () => setZone(step.zone));
+    item.append(jump);
+    guide.append(item);
+  });
+  const guideHide = document.createElement('button');
+  guideHide.type = 'button';
+  guideHide.className = 'btn tiny guide-hide';
+  guideHide.textContent = 'Hide';
+  const guideRow = document.createElement('div');
+  guideRow.className = 'guide-row';
+  guideRow.append(guide, guideHide);
+  guideHide.addEventListener('click', () => {
+    guideRow.hidden = true;
+    try {
+      localStorage.setItem('rs4-hide-guide', '1');
+    } catch {
+      // Ignore storage failures.
+    }
+  });
+  try {
+    guideRow.hidden = localStorage.getItem('rs4-hide-guide') === '1';
+  } catch {
+    guideRow.hidden = false;
+  }
 
-  const footer = document.createElement('footer');
+  const arrangeZone = document.createElement('section');
+  arrangeZone.className = 'zone zone-session';
+  arrangeZone.append(arrangeHead, guideRow, deck);
+
+  const mixHead = document.createElement('div');
+  mixHead.className = 'zone-head';
+  const mixTitle = document.createElement('h2');
+  mixTitle.textContent = 'Console';
+  const mixHint = document.createElement('p');
+  mixHint.className = 'note';
+  mixHint.textContent = 'The insert chips show what is printed. Monitor starts off. Delay and reverb are cue sends and are not in the WAV.';
+  mixHead.append(mixTitle, mixHint);
+  const mixZone = document.createElement('section');
+  mixZone.className = 'zone zone-console';
+  mixZone.append(mixHead, consoleRow);
+
+  const browseZone = document.createElement('section');
+  browseZone.className = 'zone zone-browse';
+  browseZone.append(library.element);
+
+  const playZone = document.createElement('section');
+  playZone.className = 'zone zone-play';
+  playZone.append(library.play);
+
+  const desk = document.createElement('div');
+  desk.className = 'desk';
+  desk.append(browseZone, mixZone, arrangeZone, playZone);
+
+  const footer = document.createElement('details');
   footer.className = 'footer';
-  footer.textContent =
+  const footerSummary = document.createElement('summary');
+  footerSummary.textContent = 'Shortcuts';
+  const footerCopy = document.createElement('p');
+  footerCopy.textContent =
     'Space plays or stops. R records. A–K plays the keys. Drag a sample onto the grid — it snaps to the beat, and Shift snaps to 16ths. Drag a clip to move it, or drag the ruler to set the loop. Tracks 1–4 print the channel; 5–8 print pads and keys. Headphones if you raise the monitor.';
+  footer.append(footerSummary, footerCopy);
 
-  element.append(top, suspended, transport, workspace, status, footer);
+  const zoneNav = document.createElement('nav');
+  zoneNav.className = 'zone-nav';
+  zoneNav.setAttribute('aria-label', 'Desk zones');
+  const zoneButtons = new Map<ZoneName, HTMLButtonElement>();
+  const zoneLabels: Array<[ZoneName, string]> = [
+    ['arrange', 'Arrange'],
+    ['mix', 'Mix'],
+    ['browse', 'Sounds'],
+    ['play', 'Play'],
+  ];
+  for (const [name, label] of zoneLabels) {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'zone-tab';
+    tab.textContent = label;
+    tab.dataset.zone = name;
+    tab.addEventListener('click', () => setZone(name));
+    zoneNav.append(tab);
+    zoneButtons.set(name, tab);
+  }
+
+  const dock = document.createElement('div');
+  dock.className = 'dock';
+  dock.append(transport, zoneNav);
+
+  element.append(top, suspended, desk, status, footer, dock);
+  setZone('arrange');
+
+  function setZone(next: ZoneName): void {
+    element.dataset.zone = next;
+    for (const [name, tab] of zoneButtons) {
+      const on = name === next;
+      tab.classList.toggle('on', on);
+      tab.setAttribute('aria-pressed', String(on));
+    }
+  }
 
   let last: EngineSnapshot | null = null;
   let booting = false;

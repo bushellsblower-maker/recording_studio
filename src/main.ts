@@ -128,7 +128,7 @@ const root = document.querySelector('#app');
 if (!root) throw new Error('Missing #app');
 root.replaceChildren(view.element);
 view.setStatus(
-  'Press Power, then use the Browser to preview a loop and drop it on the grid. Pads quantize while the transport runs. Tracks 1–4 print the channel; 5–8 print pads and keys. Raise MONITOR only to audition the live chain — it starts off so a mic cannot feed back.',
+  'Press Power. Sounds are in the browser — preview, then Place or drag onto a lane. Audio 1–4 print the channel; Inst 5–8 print pads and keys. On a phone, use Arrange, Mix, Sounds, and Play. MONITOR starts off so a mic cannot feed back.',
 );
 void bank
   .load()
