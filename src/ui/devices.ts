@@ -46,7 +46,7 @@ export function buildDevices(handlers: DeviceHandlers): DevicePanel {
   grid.className = 'device-grid';
 
   const session = document.createElement('div');
-  session.className = 'device-card';
+  session.className = 'device-card device-session';
   const slots = document.createElement('div');
   slots.className = 'scene-slots';
   const scenes = document.createElement('div');
@@ -108,7 +108,7 @@ export function buildDevices(handlers: DeviceHandlers): DevicePanel {
   }
 
   const mixer = document.createElement('div');
-  mixer.className = 'device-card';
+  mixer.className = 'device-card device-channel';
   const delay = range('Delay send', 0, 1, 0.01, (value) => handlers.send(trackIndex, 'delay', value));
   const reverb = range('Reverb send', 0, 1, 0.01, (value) => handlers.send(trackIndex, 'reverb', value));
   const mono = document.createElement('button');
@@ -163,7 +163,7 @@ export function buildDevices(handlers: DeviceHandlers): DevicePanel {
   rack.append(cardTitle('Inserts'), rackHost, curve, gr);
 
   const autoCard = document.createElement('div');
-  autoCard.className = 'device-card';
+  autoCard.className = 'device-card device-auto';
   const lanePick = document.createElement('select');
   lanePick.setAttribute('aria-label', 'Automation lane');
   for (const [value, label] of [
@@ -206,7 +206,7 @@ export function buildDevices(handlers: DeviceHandlers): DevicePanel {
   autoCard.append(cardTitle('Automation'), rowOf(lanePick, clearLane), autoCanvas, autoHint);
 
   const synthCard = document.createElement('div');
-  synthCard.className = 'device-card';
+  synthCard.className = 'device-card device-synth';
   const wave = document.createElement('select');
   wave.setAttribute('aria-label', 'Synth waveform');
   for (const name of ['sawtooth', 'square', 'triangle', 'sine'] as const) {

@@ -1769,7 +1769,17 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
     overflow: hidden;
     align-content: stretch;
     grid-auto-rows: minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      "session channel auto synth"
+      "inserts inserts inserts inserts";
   }
+
+  .desk.is-desktop-layout .device-session { grid-area: session; }
+  .desk.is-desktop-layout .device-channel { grid-area: channel; }
+  .desk.is-desktop-layout .device-auto { grid-area: auto; }
+  .desk.is-desktop-layout .device-synth { grid-area: synth; }
+  .desk.is-desktop-layout .device-rack { grid-area: inserts; }
 
   .desk.is-desktop-layout .device-card {
     display: flex;
@@ -1884,12 +1894,12 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
   }
 }
 
-@container device-pane (max-height: 520px) {
-  .device-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-  }
-
-  .device-rack {
-    grid-column: auto;
+@container device-pane (max-width: 620px) {
+  .desk.is-desktop-layout .device-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "session channel"
+      "auto synth"
+      "inserts inserts";
   }
 }
