@@ -135,6 +135,7 @@ export function attachDeskLayout(
   let renderGen = 0;
   let chromeObserver: ResizeObserver | null = null;
   let measuredWidth = -1;
+  let applying = false;
   const naturals = new Map<DeskZoneId, number>();
   const indicator = document.createElement('div');
   indicator.className = 'desk-drop';
@@ -150,15 +151,21 @@ export function attachDeskLayout(
   }
   shortcutSummary.append(makeReset());
 
-  const collapseObserver = new MutationObserver(() => {
+  const collapseObserver = new MutationObserver((records) => {
     if (!mq.matches) return;
-    naturals.clear();
+    const collapsed = records.some((record) => {
+      const el = record.target;
+      if (!(el instanceof HTMLElement)) return false;
+      const was = record.oldValue?.split(/\s+/).includes('is-collapsed') ?? false;
+      return el.classList.contains('is-collapsed') !== was;
+    });
+    if (!collapsed) return;
     applyMetrics();
   });
   for (const id of DESK_ZONES) {
     const host =
       id === 'browse' ? zones.browse.querySelector('.library') : id === 'play' ? zones.play.querySelector('.perform') : zones[id];
-    if (host) collapseObserver.observe(host, { attributes: true, attributeFilter: ['class'] });
+    if (host) collapseObserver.observe(host, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
   }
 
   mq.addEventListener('change', () => {
@@ -259,7 +266,16 @@ export function attachDeskLayout(
   }
 
   function applyMetrics(): void {
-    if (!mq.matches) return;
+    if (!mq.matches || applying) return;
+    applying = true;
+    try {
+      applyMetricsNow();
+    } finally {
+      applying = false;
+    }
+  }
+
+  function applyMetricsNow(): void {
     const left = desk.querySelector<HTMLElement>('.desk-col[data-col="0"]');
     const right = desk.querySelector<HTMLElement>('.desk-col[data-col="1"]');
     const split = desk.querySelector<HTMLElement>('.desk-split');
