@@ -18,9 +18,9 @@ Open the local URL Vite prints. Click **Power** before using the transport.
 Track 1 starts armed. The tone generator is the default input, and a CC0 session kit is built in.
 
 1. Press **Power**.
-2. In **Sample library**, click a loop to preview it, then **Load on track** (or drag it onto a track). Loops are 100 BPM and set the click to match.
-3. Press **Play**. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded.
-4. Press **Record**, then **Stop**, to print the armed tracks. **Undo** restores the previous take.
+2. In the side **Browser**, click a loop to preview it, then **Load on track** or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loops are 100 BPM and set the click to match.
+3. Press **Play**. The playhead runs on the bar grid. Drag a clip to move it, or drag the ruler to set the loop. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded. The transport shows **4/4**.
+4. Press **Record**, then **Stop**, to print the armed tracks. Tracks 1–4 start as audio tracks and print the channel. Tracks 5–8 start as instrument tracks and print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
 
 The on-screen keys (or A–K on the computer keyboard) play a simple synth through the master. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
@@ -32,7 +32,7 @@ The on-screen keys (or A–K on the computer keyboard) play a simple synth throu
 3. Leave **Monitor** down unless you are wearing headphones.
 4. Arm a track and press **Record**. Tracks that are not armed play back underneath the new take.
 
-Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **LOOP** repeats a bar region (1, 2, 4, or 8 bars) and, when recording, ends the take at the end of that region.
+Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **LOOP** repeats a bar region (1, 2, 4, or 8 bars) and, when recording, ends the take at the end of that region. The channel strip shows the insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
 
 Check the project with:
 
@@ -54,18 +54,18 @@ mic and/or tone
   -> low shelf -> mid peak -> high shelf
   -> gate (AudioWorklet) -> compressor -> makeup
   -> channel fader -> pan
-       |-> record tap --------> armed tracks (printed)
+       |-> record tap --------> armed audio tracks (printed)
        |-> monitor (default off) -> mute/solo
              |-> master sum
              |-> delay send  -> delay -> master
              |-> reverb send -> convolver -> master
 playback tracks -> mute/solo -> master sum
 metronome (cue only) -------> master sum
-sample pads and keys -------> master sum, and the record tap while a take is running
+sample pads and keys -------> master sum, and armed instrument tracks while recording
 master fader -> stereo meters -> safety limiter -> mute -> speakers
 ```
 
-What you record is the channel after the inserts, fader, and pan, plus any pads or keys you play during the take. Monitor level does not change the take, so you can record with the monitor off. Delay and reverb are monitor sends and are not in the track files. The mixdown WAV sums the printed tracks using track levels, pan, mute, solo, and the master fader. It is scaled only if the sum would clip.
+Audio tracks record the channel after the inserts, fader, and pan. Instrument tracks record pads and keys. Monitor level does not change the take, so you can record with the monitor off. Delay and reverb are monitor sends and are not in the track files. The mixdown WAV places each clip at its arrangement start, follows loop tempo, and sums the printed tracks using track levels, pan, mute, solo, and the master fader. It is scaled only if the sum would clip.
 
 ## Sample library
 
@@ -77,9 +77,9 @@ The playable kit lives in `public/samples/` and is served with the site. Drum on
 - Output latency is the browser and device latency. Speakers plus a live monitor can howl; the monitor starts off and warns when you raise it.
 - Track audio is 32-bit float in memory and 16-bit stereo PCM on disk. A few minutes on eight tracks is hundreds of megabytes.
 - The metronome is a cue. It is not recorded. Library loops are 100 BPM and follow the session tempo (pitch follows the click).
-- Armed tracks all receive the same stereo channel, including pad and key hits played while recording. Arm state is locked while the transport is recording.
-- Overdub replaces the armed tracks from the top. Other tracks play from the start in time with the new take. **Undo** restores the clips from before the last record, load, import, or reset.
-- **LOOP** repeats playback across the chosen bars. A recorded take still runs once and stops at the end of the region.
+- Armed tracks of the same type receive the same bus. Audio tracks print the channel. Instrument tracks print pads and keys. Arm state and track type are locked while the transport is recording.
+- Each track holds one clip. Drag it on the bar grid to change where it starts. **Undo** restores clips, including their start positions, from before the last record, load, import, or reset.
+- **LOOP** repeats playback across the chosen bars, including clips that start inside the region. A recorded take still runs once and stops at the end of the region, and the new clip starts at the loop.
 - The master path includes a transparent safety limiter after the meters. It only catches overs.
 - If `AudioWorklet` fails to load, the gate is bypassed and recording falls back to `ScriptProcessorNode`.
 - This is a front-end app. Nothing is uploaded.
