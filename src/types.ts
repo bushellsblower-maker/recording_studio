@@ -1,10 +1,12 @@
-export const TRACK_COUNT = 4;
+export const TRACK_COUNT = 8;
 
 export type InputMode = 'mic' | 'tone' | 'both';
 
 export type ToneShape = OscillatorType | 'noise';
 
 export type TransportMode = 'stopped' | 'playing' | 'recording' | 'stopping';
+
+export type TrackKind = 'audio' | 'instrument';
 
 export type MicState = 'off' | 'pending' | 'on' | 'denied' | 'missing' | 'busy' | 'error';
 
@@ -14,6 +16,9 @@ export interface TrackSnapshot {
   solo: boolean;
   hasAudio: boolean;
   duration: number;
+  name: string;
+  kind: TrackKind;
+  startBeat: number;
 }
 
 export interface EngineSnapshot {
@@ -29,6 +34,8 @@ export interface EngineSnapshot {
   inputSolo: boolean;
   masterMute: boolean;
   metroOn: boolean;
+  loopOn: boolean;
+  canUndo: boolean;
 }
 
 export interface Levels {

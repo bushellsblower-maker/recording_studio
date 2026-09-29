@@ -65,6 +65,22 @@ export function formatBpm(bpm: number): string {
   return `${Math.round(bpm)} bpm`;
 }
 
+export function formatBarBeat(bar: number, beat: number): string {
+  const safeBar = Number.isFinite(bar) && bar > 0 ? Math.floor(bar) : 1;
+  const safeBeat = Number.isFinite(beat) && beat > 0 ? Math.floor(beat) : 1;
+  return `${String(safeBar).padStart(3, '0')}.${safeBeat}`;
+}
+
+/** 1-based bar and beat in 4/4 from a musical time in seconds. */
+export function musicalPosition(seconds: number, bpm: number): { bar: number; beat: number } {
+  const secondsPerBeat = 60 / Math.max(1, bpm);
+  const beats = Math.max(0, seconds) / secondsPerBeat;
+  return {
+    bar: Math.floor(beats / 4) + 1,
+    beat: Math.floor(beats % 4) + 1,
+  };
+}
+
 export function meterPercent(linear: number): number {
   const db = linear <= 0.00001 ? -80 : 20 * Math.log10(linear);
   const normalized = (db - -48) / 48;

@@ -1,8 +1,10 @@
+import type { SampleMeta } from '../audio/library';
 import { DEFAULTS, RANGES } from '../defaults';
-import { formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
+import { formatBarBeat, formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
 import type { EngineSnapshot, InputMode, Levels, MicState, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
+import { buildLibrary } from './library';
 
 export interface ConsoleHandlers {
   power: () => void;
@@ -57,16 +59,39 @@ export interface ConsoleHandlers {
   trackMuted: (index: number, muted: boolean) => void;
   trackSolo: (index: number, solo: boolean) => void;
   trackDb: (index: number, db: number) => void;
+  trackPan: (index: number, pan: number) => void;
+  trackKind: (index: number, kind: 'audio' | 'instrument') => void;
+  trackStart: (index: number, beat: number) => void;
+  trackImport: (index: number, file: File, beat: number) => void;
+  trackDropSample: (index: number, sampleId: string, beat: number) => void;
   downloadTrack: (index: number) => void;
   downloadMix: () => void;
+  undo: () => void;
+  loop: (on: boolean) => void;
+  loopStart: (bar: number) => void;
+  loopBars: (bars: number) => void;
+  loopRegion: (startBar: number, bars: number) => void;
+  previewSample: (id: string) => void;
+  loadSample: (id: string) => void;
+  triggerSample: (id: string) => void;
+  noteOn: (midi: number) => void;
+  noteOff: (midi: number) => void;
 }
 
 export interface PaintFrame extends Levels {
   position: number;
   clockLabel: 'POS' | 'LEN';
+  bar: number;
+  beat: number;
   sessionLength: number;
   durations: readonly number[];
   peaks: readonly (readonly number[])[];
+  trackLevels: readonly number[];
+  bpm: number;
+  spans: readonly { startBeat: number; lengthBeats: number }[];
+  loopStartBeat: number;
+  loopBeats: number;
+  looping: boolean;
   recording: boolean;
   playing: boolean;
   suspended: boolean;
@@ -79,9 +104,14 @@ export interface ConsoleView {
   setMonitorWarning: (on: boolean) => void;
   render: (snapshot: EngineSnapshot) => void;
   paint: (frame: PaintFrame) => void;
+  setCatalog: (samples: SampleMeta[]) => void;
+  catalogFailed: (message: string) => void;
+  setBpm: (bpm: number) => void;
+  targetTrack: () => number;
+  quantizeOn: () => boolean;
 }
 
-const TRACK_COLORS = ['#e15a3a', '#e0a106', '#3cb7a0', '#6c8cff'];
+const TRACK_COLORS = ['#e15a3a', '#e0a106', '#3cb7a0', '#6c8cff', '#d36ad6', '#7dcea0', '#f39c6b', '#8ecae6'];
 
 export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const element = document.createElement('div');
@@ -119,6 +149,9 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const clock = document.createElement('span');
   clock.className = 'clock';
   clock.textContent = '00:00.0';
+  const bars = document.createElement('span');
+  bars.className = 'bars';
+  bars.textContent = '001.1';
 
   const top = document.createElement('header');
   top.className = 'topbar';
@@ -127,23 +160,29 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const title = document.createElement('h1');
   title.textContent = 'RS-4';
   const sub = document.createElement('p');
-  sub.textContent = 'Recording console';
+  sub.textContent = 'Eight-track console';
   brand.append(title, sub);
   const pills = document.createElement('div');
   pills.className = 'pills';
   pills.append(micPill, sampleRate);
+  const sig = document.createElement('span');
+  sig.className = 'sig';
+  sig.textContent = '4/4';
+  sig.title = 'Time signature';
   const clockWrap = document.createElement('div');
   clockWrap.className = 'clock-wrap';
-  clockWrap.append(clockLabel, clock);
+  clockWrap.append(clockLabel, clock, bars, sig);
   top.append(brand, pills, clockWrap, power);
 
   const rec = button('REC', 'btn rec');
   const stop = button('STOP', 'btn stop');
   const play = button('PLAY', 'btn play');
+  const undo = button('UNDO', 'btn small');
   const reset = button('RESET', 'btn reset');
   rec.addEventListener('click', handlers.record);
   stop.addEventListener('click', handlers.stop);
   play.addEventListener('click', handlers.play);
+  undo.addEventListener('click', handlers.undo);
   reset.addEventListener('click', handlers.reset);
 
   const metro = button('METRO', 'btn small');
@@ -152,6 +191,39 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     if (!last) return;
     handlers.metro(!last.metroOn);
   });
+  const quantize = button('QUANT', 'btn small on');
+  quantize.setAttribute('aria-pressed', 'true');
+  quantize.title = 'Quantize sample pads to the beat while the transport is running';
+  quantize.addEventListener('click', () => {
+    const next = quantize.getAttribute('aria-pressed') !== 'true';
+    quantize.classList.toggle('on', next);
+    quantize.setAttribute('aria-pressed', String(next));
+  });
+  const loop = button('LOOP', 'btn small');
+  loop.setAttribute('aria-pressed', 'false');
+  loop.addEventListener('click', () => {
+    if (!last) return;
+    handlers.loop(!last.loopOn);
+  });
+  const loopStart = document.createElement('input');
+  loopStart.type = 'number';
+  loopStart.className = 'loop-input';
+  loopStart.min = '1';
+  loopStart.max = '64';
+  loopStart.step = '1';
+  loopStart.value = '1';
+  loopStart.setAttribute('aria-label', 'Loop start bar');
+  loopStart.addEventListener('change', () => handlers.loopStart(Number(loopStart.value)));
+  const loopBars = document.createElement('select');
+  loopBars.setAttribute('aria-label', 'Loop length in bars');
+  for (const bars of [1, 2, 4, 8]) {
+    const option = document.createElement('option');
+    option.value = String(bars);
+    option.textContent = `${bars} bar${bars === 1 ? '' : 's'}`;
+    option.selected = bars === 2;
+    loopBars.append(option);
+  }
+  loopBars.addEventListener('change', () => handlers.loopBars(Number(loopBars.value)));
   const bpm = knob('BPM', RANGES.metroBpm, DEFAULTS.metroBpm, formatBpm, handlers.metroBpm, 'Metronome tempo');
   const metroLevel = knob('CLICK', RANGES.metroLevel, DEFAULTS.metroLevel, formatPercent, handlers.metroLevel, 'Metronome level');
 
@@ -159,10 +231,13 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   transport.className = 'transport panel';
   const transportButtons = document.createElement('div');
   transportButtons.className = 'transport-buttons';
-  transportButtons.append(rec, stop, play, reset);
+  transportButtons.append(rec, stop, play, undo, reset);
   const metroBox = document.createElement('div');
   metroBox.className = 'metro';
-  metroBox.append(metro, bpm.root, metroLevel.root);
+  const loopLabel = document.createElement('span');
+  loopLabel.className = 'loop-label';
+  loopLabel.textContent = 'from bar';
+  metroBox.append(metro, quantize, bpm.root, metroLevel.root, loop, loopLabel, loopStart, loopBars);
   transport.append(transportButtons, metroBox);
 
   const micButton = button('Enable microphone', 'btn small wide');
@@ -263,12 +338,23 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const channelMeters = document.createElement('div');
   channelMeters.className = 'strip';
   channelMeters.append(channelFader.root, inputMeter.root);
+  const chipPre = insertChip('Pre', true);
+  const chipHpf = insertChip('HPF', true);
+  const chipEq = insertChip('EQ', true);
+  const chipGate = insertChip('Gate', false);
+  const chipComp = insertChip('Comp', true);
+  const chipDelay = insertChip('Delay', false);
+  const chipVerb = insertChip('Verb', false);
+  const inserts = document.createElement('div');
+  inserts.className = 'inserts';
+  inserts.append(chipPre, chipHpf, chipEq, chipGate, chipComp, chipDelay, chipVerb);
   const channelPanel = panel(
     'Channel',
+    inserts,
     row(preamp.root, hpf.root, pan.root),
     row(polarity, inputMute, inputSolo),
     channelMeters,
-    note('Inserts, fader, and pan are printed. Monitor does not change the take.'),
+    note('Inserts, fader, and pan are printed on audio tracks. Monitor does not change the take.'),
   );
 
   const lowHz = knob('LOW', RANGES.lowHz, DEFAULTS.lowHz, formatHz, handlers.lowHz, 'Low shelf frequency');
@@ -299,6 +385,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     gateBtn.classList.toggle('on', next);
     gateBtn.setAttribute('aria-pressed', String(next));
     handlers.gate(next);
+    chipGate.classList.toggle('on', next);
   });
   const gateNote = note('Gate needs AudioWorklet, which this browser did not start.');
   gateNote.hidden = true;
@@ -326,9 +413,15 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const delayTime = knob('TIME', RANGES.delayTime, DEFAULTS.delayTime, formatMs, handlers.delayTime, 'Delay time');
   const delayFeedback = knob('FB', RANGES.delayFeedback, DEFAULTS.delayFeedback, formatPercent, handlers.delayFeedback, 'Delay feedback');
   const delayDamp = knob('DAMP', RANGES.delayDamp, DEFAULTS.delayDamp, formatHz, handlers.delayDamp, 'Delay feedback tone');
-  const delaySend = knob('SEND', RANGES.delaySend, DEFAULTS.delaySend, formatPercent, handlers.delaySend, 'Delay send');
+  const delaySend = knob('SEND', RANGES.delaySend, DEFAULTS.delaySend, formatPercent, (amount) => {
+    handlers.delaySend(amount);
+    chipDelay.classList.toggle('on', amount > 0.001);
+  }, 'Delay send');
   const reverbDecay = knob('DECAY', RANGES.reverbDecay, DEFAULTS.reverbDecay, (value) => `${value.toFixed(2)} s`, handlers.reverbDecay, 'Reverb decay');
-  const reverbSend = knob('SEND', RANGES.reverbSend, DEFAULTS.reverbSend, formatPercent, handlers.reverbSend, 'Reverb send');
+  const reverbSend = knob('SEND', RANGES.reverbSend, DEFAULTS.reverbSend, formatPercent, (amount) => {
+    handlers.reverbSend(amount);
+    chipVerb.classList.toggle('on', amount > 0.001);
+  }, 'Reverb send');
   const fxPanel = panel(
     'FX sends',
     label('Delay'),
@@ -343,16 +436,89 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   consoleRow.className = 'console';
   consoleRow.append(inputPanel, channelPanel, eqPanel, dynPanel, fxPanel);
 
+  let targetTrack = 0;
+  const library = buildLibrary({
+    preview: handlers.previewSample,
+    load: handlers.loadSample,
+    trigger: handlers.triggerSample,
+    noteOn: handlers.noteOn,
+    noteOff: handlers.noteOff,
+  });
+
   const tracks: TrackRow[] = [];
   const trackList = document.createElement('div');
   trackList.className = 'tracks';
+  let arrangeBeats = 16;
+  const dragBeats = new Map<number, number>();
+  let dragging: { index: number; origin: number; grab: number } | null = null;
+  let loopPreview: { startBeat: number; bars: number } | null = null;
+  let rulerAnchor = 0;
+  let rulerActive = false;
+  let spans: { startBeat: number; lengthBeats: number }[] = [];
+
+  const ruler = document.createElement('div');
+  ruler.className = 'track ruler-row';
+  const rulerLabel = document.createElement('span');
+  rulerLabel.className = 'track-name';
+  rulerLabel.textContent = 'BARS';
+  const rulerCanvas = document.createElement('canvas');
+  rulerCanvas.className = 'wave ruler';
+  rulerCanvas.setAttribute('aria-hidden', 'true');
+  const rulerSig = document.createElement('span');
+  rulerSig.className = 'track-time';
+  rulerSig.textContent = '4/4';
+  ruler.append(
+    rulerLabel,
+    document.createElement('span'),
+    document.createElement('span'),
+    document.createElement('span'),
+    rulerCanvas,
+    rulerSig,
+    document.createElement('span'),
+  );
+  rulerCanvas.addEventListener('pointerdown', (event) => {
+    if (last?.mode === 'recording' || last?.mode === 'stopping') return;
+    rulerCanvas.setPointerCapture(event.pointerId);
+    rulerActive = true;
+    rulerAnchor = beatFromClient(rulerCanvas, event.clientX);
+    loopPreview = loopFromDrag(rulerAnchor, rulerAnchor);
+    event.preventDefault();
+  });
+  rulerCanvas.addEventListener('pointermove', (event) => {
+    if (!rulerActive) return;
+    loopPreview = loopFromDrag(rulerAnchor, beatFromClient(rulerCanvas, event.clientX));
+  });
+  const finishRuler = (): void => {
+    if (!rulerActive || !loopPreview) return;
+    const startBar = Math.min(64, Math.floor(loopPreview.startBeat / 4) + 1);
+    const bars = loopPreview.bars;
+    rulerActive = false;
+    loopStart.value = String(startBar);
+    loopBars.value = String(bars);
+    loopPreview = null;
+    handlers.loopRegion(startBar, bars);
+  };
+  rulerCanvas.addEventListener('pointerup', finishRuler);
+  rulerCanvas.addEventListener('pointercancel', () => {
+    rulerActive = false;
+    loopPreview = null;
+  });
+  trackList.append(ruler);
+
   for (let index = 0; index < TRACK_COUNT; index++) {
     const rowEl = document.createElement('div');
     rowEl.className = 'track';
+    if (index === 0) rowEl.classList.add('is-target');
     rowEl.style.setProperty('--track', TRACK_COLORS[index] ?? '#e0a106');
     const name = document.createElement('span');
     name.className = 'track-name';
     name.textContent = `TRK ${index + 1}`;
+    const clip = document.createElement('span');
+    clip.className = 'track-clip';
+    clip.textContent = 'empty';
+    const id = document.createElement('div');
+    id.className = 'track-id';
+    id.append(name, clip);
     const arm = button('ARM', 'btn tiny arm');
     const mute = button('M', 'btn tiny');
     mute.setAttribute('aria-label', `Track ${index + 1} mute`);
@@ -370,9 +536,17 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       if (!last) return;
       handlers.trackSolo(index, !last.tracks[index]?.solo);
     });
+    const kind = button(index < 4 ? 'AUD' : 'INST', 'btn tiny kind');
+    kind.setAttribute('aria-label', `Track ${index + 1} type`);
+    kind.title = 'Audio tracks print the channel. Instrument tracks print pads and keys.';
+    kind.addEventListener('click', () => {
+      if (!last) return;
+      const current = last.tracks[index]?.kind ?? 'audio';
+      handlers.trackKind(index, current === 'audio' ? 'instrument' : 'audio');
+    });
     const toggles = document.createElement('div');
     toggles.className = 'track-toggles';
-    toggles.append(arm, mute, solo);
+    toggles.append(arm, mute, solo, kind);
     const level = document.createElement('input');
     level.type = 'range';
     level.min = String(RANGES.trackDb.min);
@@ -391,18 +565,122 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     const levelWrap = document.createElement('label');
     levelWrap.className = 'track-level';
     levelWrap.append(level, levelRead);
+    const pan = document.createElement('input');
+    pan.type = 'range';
+    pan.min = String(RANGES.pan.min);
+    pan.max = String(RANGES.pan.max);
+    pan.step = String(RANGES.pan.step);
+    pan.value = '0';
+    pan.setAttribute('aria-label', `Track ${index + 1} pan`);
+    const panRead = document.createElement('span');
+    panRead.className = 'track-db';
+    panRead.textContent = 'C';
+    pan.addEventListener('input', () => {
+      const value = Number(pan.value);
+      panRead.textContent = formatPan(value);
+      handlers.trackPan(index, value);
+    });
+    const panWrap = document.createElement('label');
+    panWrap.className = 'track-level';
+    panWrap.append(pan, panRead);
+    const mix = document.createElement('div');
+    mix.className = 'track-mix';
+    mix.append(levelWrap, panWrap);
+    const meterFill = document.createElement('div');
+    meterFill.className = 'mini-meter-fill';
+    const meter = document.createElement('div');
+    meter.className = 'mini-meter';
+    meter.append(meterFill);
     const canvas = document.createElement('canvas');
     canvas.className = 'wave';
     canvas.setAttribute('aria-hidden', 'true');
     const time = document.createElement('span');
     time.className = 'track-time';
     time.textContent = '00:00.0';
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.accept = 'audio/*,.wav,.mp3,.ogg,.flac,.m4a';
+    file.hidden = true;
+    const importer = button('IMP', 'btn tiny');
+    importer.setAttribute('aria-label', `Import audio onto track ${index + 1}`);
+    importer.addEventListener('click', () => file.click());
+    file.addEventListener('change', () => {
+      const picked = file.files?.[0];
+      file.value = '';
+      if (picked) handlers.trackImport(index, picked, 0);
+    });
     const download = button('WAV', 'btn tiny');
     download.setAttribute('aria-label', `Download track ${index + 1} WAV`);
     download.addEventListener('click', () => handlers.downloadTrack(index));
-    rowEl.append(name, toggles, levelWrap, canvas, time, download);
+    const actions = document.createElement('div');
+    actions.className = 'track-actions';
+    actions.append(importer, download, file);
+    rowEl.addEventListener('click', (event) => {
+      const hit = event.target;
+      if (hit instanceof HTMLElement && hit.closest('button, input, label')) return;
+      chooseTrack(index);
+    });
+    rowEl.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      rowEl.classList.add('is-drop');
+    });
+    rowEl.addEventListener('dragleave', () => rowEl.classList.remove('is-drop'));
+    rowEl.addEventListener('drop', (event) => {
+      event.preventDefault();
+      rowEl.classList.remove('is-drop');
+      chooseTrack(index);
+      const sampleId = event.dataTransfer?.getData('application/x-rs-sample');
+      const dropped = event.dataTransfer?.files?.[0];
+      const beat = snapBeat(beatFromClient(canvas, event.clientX), event.shiftKey);
+      if (sampleId) handlers.trackDropSample(index, sampleId, beat);
+      else if (dropped) handlers.trackImport(index, dropped, beat);
+    });
+    canvas.addEventListener('pointerdown', (event) => {
+      if (last?.mode === 'recording' || last?.mode === 'stopping') return;
+      const span = spans[index];
+      if (!span || span.lengthBeats <= 0) return;
+      const beat = beatFromClient(canvas, event.clientX);
+      const origin = dragBeats.get(index) ?? span.startBeat;
+      if (beat < origin - 0.05 || beat > origin + span.lengthBeats) return;
+      dragging = { index, origin, grab: beat - origin };
+      canvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (!dragging || dragging.index !== index || !canvas.hasPointerCapture(event.pointerId)) return;
+      dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, event.shiftKey));
+    });
+    const finishDrag = (event: PointerEvent): void => {
+      if (!dragging || dragging.index !== index) return;
+      const beat = dragBeats.get(index) ?? dragging.origin;
+      dragging = null;
+      dragBeats.delete(index);
+      handlers.trackStart(index, beat);
+      event.stopPropagation();
+    };
+    canvas.addEventListener('pointerup', finishDrag);
+    canvas.addEventListener('pointercancel', () => {
+      if (!dragging || dragging.index !== index) return;
+      dragging = null;
+      dragBeats.delete(index);
+    });
+    rowEl.append(id, toggles, mix, meter, canvas, time, actions);
     trackList.append(rowEl);
-    tracks.push({ arm, mute, solo, canvas, time, download });
+    tracks.push({ row: rowEl, arm, mute, solo, kind, clip, canvas, time, download, meterFill });
+  }
+
+  function beatFromClient(canvas: HTMLCanvasElement, clientX: number): number {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 2) return 0;
+    const frac = (clientX - rect.left) / rect.width;
+    return Math.max(0, Math.min(arrangeBeats, frac * arrangeBeats));
+  }
+
+  function chooseTrack(index: number): void {
+    targetTrack = index;
+    library.setTarget(index);
+    tracks.forEach((track, trackIndex) => track.row.classList.toggle('is-target', trackIndex === index));
   }
 
   const masterMute = button('MUTE', 'btn small');
@@ -434,11 +712,20 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   deck.className = 'deck';
   deck.append(trackList, masterPanel);
 
+  const stage = document.createElement('div');
+  stage.className = 'stage';
+  stage.append(consoleRow, deck);
+
+  const workspace = document.createElement('div');
+  workspace.className = 'workspace';
+  workspace.append(library.element, stage);
+
   const footer = document.createElement('footer');
   footer.className = 'footer';
-  footer.textContent = 'Space plays or stops. R records. Shift-drag a knob for fine moves. Double-click a control to reset it. Headphones if you raise the monitor.';
+  footer.textContent =
+    'Space plays or stops. R records. A–K plays the keys. Drag a sample onto the grid — it snaps to the beat, and Shift snaps to 16ths. Drag a clip to move it, or drag the ruler to set the loop. Tracks 1–4 print the channel; 5–8 print pads and keys. Headphones if you raise the monitor.';
 
-  element.append(top, suspended, transport, consoleRow, deck, status, footer);
+  element.append(top, suspended, transport, workspace, status, footer);
 
   let last: EngineSnapshot | null = null;
   let booting = false;
@@ -486,6 +773,8 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     press(inputSolo, snapshot.inputSolo);
     press(masterMute, snapshot.masterMute);
     press(metro, snapshot.metroOn);
+    press(loop, snapshot.loopOn);
+    undo.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping' || !snapshot.canUndo;
     gateBtn.disabled = locked || (snapshot.powered && !snapshot.gateAvailable);
     gateNote.hidden = !snapshot.powered || snapshot.gateAvailable;
     snapshot.tracks.forEach((track, index) => {
@@ -495,6 +784,10 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       ui.arm.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping';
       press(ui.mute, track.muted);
       press(ui.solo, track.solo);
+      ui.clip.textContent = track.name || (track.hasAudio ? 'clip' : 'empty');
+      ui.kind.textContent = track.kind === 'instrument' ? 'INST' : 'AUD';
+      ui.kind.classList.toggle('on', track.kind === 'instrument');
+      ui.kind.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping';
       ui.download.disabled = !track.hasAudio;
     });
     mix.disabled = locked;
@@ -509,6 +802,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     suspended.hidden = !frame.suspended;
     clock.textContent = formatTime(frame.position);
     clockLabel.textContent = frame.clockLabel;
+    bars.textContent = formatBarBeat(frame.bar, frame.beat);
     element.classList.toggle('is-recording', frame.recording);
     element.classList.toggle('is-playing', frame.playing);
 
@@ -528,31 +822,63 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     gr.fill.style.width = `${Math.min(100, (reduction / 24) * 100)}%`;
     gr.read.textContent = reduction < 0.05 ? '0' : reduction.toFixed(1);
 
-    const scale = Math.max(frame.sessionLength, frame.position, 0.001);
+    spans = frame.spans.map((span) => ({ startBeat: span.startBeat, lengthBeats: span.lengthBeats }));
+    let endBeat = 16;
+    for (const span of spans) endBeat = Math.max(endBeat, span.startBeat + span.lengthBeats);
+    const loopStartBeat = loopPreview?.startBeat ?? frame.loopStartBeat;
+    const loopBeats = loopPreview?.bars ? loopPreview.bars * 4 : frame.loopBeats;
+    const showLoop = loopPreview !== null || frame.looping;
+    if (showLoop) endBeat = Math.max(endBeat, loopStartBeat + loopBeats);
+    arrangeBeats = Math.max(16, Math.ceil(endBeat / 4) * 4);
+    const playhead = frame.playing || frame.recording ? (frame.position * frame.bpm) / 60 : -1;
+    drawRuler(rulerCanvas, arrangeBeats, showLoop ? loopStartBeat : 0, showLoop ? loopBeats : 0, playhead);
     tracks.forEach((track, index) => {
       const duration = frame.durations[index] ?? 0;
+      const span = spans[index] ?? { startBeat: 0, lengthBeats: 0 };
       track.time.textContent = formatTime(duration);
-      drawWave(
+      const level = frame.trackLevels[index] ?? 0;
+      track.meterFill.style.height = `${meterPercent(level)}%`;
+      track.canvas.classList.toggle('is-clip', span.lengthBeats > 0);
+      drawLane(
         track.canvas,
         frame.peaks[index] ?? [],
-        duration,
-        frame.playing || frame.recording ? frame.position : -1,
-        scale,
+        dragBeats.get(index) ?? span.startBeat,
+        span.lengthBeats,
+        arrangeBeats,
+        showLoop ? loopStartBeat : 0,
+        showLoop ? loopBeats : 0,
+        playhead,
         TRACK_COLORS[index] ?? '#e0a106',
       );
     });
   }
 
-  return { element, setStatus, setBooting, setMonitorWarning, render, paint };
+  return {
+    element,
+    setStatus,
+    setBooting,
+    setMonitorWarning,
+    render,
+    paint,
+    setCatalog: library.setCatalog,
+    catalogFailed: library.fail,
+    setBpm: (value) => bpm.set(value),
+    targetTrack: () => targetTrack,
+    quantizeOn: () => quantize.getAttribute('aria-pressed') === 'true',
+  };
 }
 
 interface TrackRow {
+  row: HTMLElement;
   arm: HTMLButtonElement;
   mute: HTMLButtonElement;
   solo: HTMLButtonElement;
+  kind: HTMLButtonElement;
+  clip: HTMLElement;
   canvas: HTMLCanvasElement;
   time: HTMLElement;
   download: HTMLButtonElement;
+  meterFill: HTMLElement;
 }
 
 interface MeterUi {
@@ -746,12 +1072,49 @@ function resizeCanvas(canvas: HTMLCanvasElement): { width: number; height: numbe
   return { width, height };
 }
 
-function drawWave(
+function drawRuler(
+  canvas: HTMLCanvasElement,
+  viewBeats: number,
+  loopStart: number,
+  loopBeats: number,
+  playhead: number,
+): void {
+  const size = resizeCanvas(canvas);
+  const ctx = canvas.getContext('2d');
+  if (!size || !ctx) return;
+  ctx.clearRect(0, 0, size.width, size.height);
+  ctx.fillStyle = '#10141a';
+  ctx.fillRect(0, 0, size.width, size.height);
+  if (loopBeats > 0) {
+    const x = (loopStart / viewBeats) * size.width;
+    const w = (loopBeats / viewBeats) * size.width;
+    ctx.fillStyle = 'rgba(224, 161, 6, 0.28)';
+    ctx.fillRect(x, 0, w, size.height);
+  }
+  ctx.font = `${Math.max(10, Math.floor(size.height * 0.42))}px ui-monospace, monospace`;
+  ctx.textBaseline = 'middle';
+  const bars = Math.ceil(viewBeats / 4);
+  for (let bar = 0; bar <= bars; bar++) {
+    const x = ((bar * 4) / viewBeats) * size.width;
+    ctx.fillStyle = 'rgba(244, 247, 251, 0.35)';
+    ctx.fillRect(x, 0, 1, size.height);
+    if (x < size.width - 16) {
+      ctx.fillStyle = '#c5ced8';
+      ctx.fillText(String(bar + 1), x + 4, size.height / 2);
+    }
+  }
+  paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
+}
+
+function drawLane(
   canvas: HTMLCanvasElement,
   peaks: readonly number[],
-  duration: number,
-  position: number,
-  scale: number,
+  startBeat: number,
+  lengthBeats: number,
+  viewBeats: number,
+  loopStart: number,
+  loopBeats: number,
+  playhead: number,
   color: string,
 ): void {
   const size = resizeCanvas(canvas);
@@ -760,29 +1123,78 @@ function drawWave(
   ctx.clearRect(0, 0, size.width, size.height);
   ctx.fillStyle = '#0c0f14';
   ctx.fillRect(0, 0, size.width, size.height);
-  if (duration <= 0 || peaks.length === 0) {
-    ctx.fillStyle = '#667484';
-    ctx.font = `${Math.max(11, Math.floor(size.height * 0.28))}px sans-serif`;
-    ctx.fillText('empty', 10, Math.floor(size.height * 0.62));
-    return;
+  if (loopBeats > 0) {
+    const x = (loopStart / viewBeats) * size.width;
+    const w = (loopBeats / viewBeats) * size.width;
+    ctx.fillStyle = 'rgba(224, 161, 6, 0.12)';
+    ctx.fillRect(x, 0, w, size.height);
   }
-  const widthFrac = scale > 0 ? Math.min(1, duration / scale) : 1;
-  const columns = Math.max(1, Math.floor(size.width * widthFrac));
-  ctx.fillStyle = color;
-  for (let x = 0; x < columns; x++) {
-    const start = Math.floor((x / columns) * peaks.length);
-    const end = Math.min(peaks.length, Math.max(start + 1, Math.floor(((x + 1) / columns) * peaks.length)));
-    let peak = 0;
-    for (let i = start; i < end; i++) {
-      const value = peaks[i] ?? 0;
-      if (value > peak) peak = value;
+  const beats = Math.ceil(viewBeats);
+  for (let beat = 0; beat <= beats; beat++) {
+    const x = (beat / viewBeats) * size.width;
+    ctx.fillStyle = beat % 4 === 0 ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.05)';
+    ctx.fillRect(x, 0, 1, size.height);
+  }
+  if (lengthBeats > 0 && peaks.length > 0) {
+    const x0 = (startBeat / viewBeats) * size.width;
+    const clipWidth = Math.max(2, (lengthBeats / viewBeats) * size.width);
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(x0, 2, clipWidth, size.height - 4);
+    ctx.fillStyle = color;
+    const columns = Math.max(1, Math.floor(clipWidth));
+    for (let x = 0; x < columns; x++) {
+      const start = Math.floor((x / columns) * peaks.length);
+      const end = Math.min(peaks.length, Math.max(start + 1, Math.floor(((x + 1) / columns) * peaks.length)));
+      let peak = 0;
+      for (let i = start; i < end; i++) {
+        const value = peaks[i] ?? 0;
+        if (value > peak) peak = value;
+      }
+      const h = Math.max(1, Math.min(1, peak) * (size.height - 8));
+      ctx.fillRect(x0 + x, (size.height - h) / 2, 1, h);
     }
-    const h = Math.max(1, Math.min(1, peak) * (size.height - 4));
-    ctx.fillRect(x, (size.height - h) / 2, 1, h);
   }
-  if (position >= 0 && scale > 0) {
-    const x = Math.min(size.width - 1, Math.max(0, (position / scale) * size.width));
-    ctx.fillStyle = '#f4f7fb';
-    ctx.fillRect(x, 0, Math.max(1, size.width / 400), size.height);
+  paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
+}
+
+function paintPlayhead(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  playhead: number,
+  viewBeats: number,
+): void {
+  if (playhead < 0 || viewBeats <= 0) return;
+  const x = Math.min(width - 1, Math.max(0, (playhead / viewBeats) * width));
+  ctx.fillStyle = '#f4f7fb';
+  ctx.fillRect(x, 0, Math.max(1, width / 500), height);
+}
+
+function snapBeat(beat: number, fine: boolean): number {
+  const grid = fine ? 0.25 : 1;
+  const steps = Math.round(beat / grid);
+  return Math.max(0, Math.min(256, steps * grid));
+}
+
+function loopFromDrag(anchor: number, current: number): { startBeat: number; bars: number } {
+  const startBeat = Math.max(0, Math.floor(Math.min(anchor, current) / 4) * 4);
+  const endBeat = Math.max(startBeat + 4, Math.ceil((Math.max(anchor, current) + 0.001) / 4) * 4);
+  const rawBars = Math.max(1, Math.round((endBeat - startBeat) / 4));
+  let bars = 1;
+  let best = Infinity;
+  for (const choice of [1, 2, 4, 8]) {
+    const distance = Math.abs(choice - rawBars);
+    if (distance < best) {
+      best = distance;
+      bars = choice;
+    }
   }
+  return { startBeat, bars };
+}
+
+function insertChip(label: string, active: boolean): HTMLElement {
+  const chip = document.createElement('span');
+  chip.className = active ? 'insert on' : 'insert';
+  chip.textContent = label;
+  return chip;
 }
