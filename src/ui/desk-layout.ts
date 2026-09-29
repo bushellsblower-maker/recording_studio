@@ -248,6 +248,7 @@ export function attachDeskLayout(
         pane.classList.add('desk-pane');
         column.append(pane);
       });
+      column.append(makeEndSplit(ids[ids.length - 1]!));
       return column;
     });
 
@@ -469,6 +470,61 @@ export function attachDeskLayout(
       saveLayout(state);
     });
     return split;
+  }
+
+  function makeEndSplit(id: DeskZoneId): HTMLElement {
+    const split = document.createElement('div');
+    split.className = 'pane-split pane-end';
+    split.role = 'separator';
+    split.tabIndex = 0;
+    split.ariaOrientation = 'horizontal';
+    split.title = `Drag to resize ${ZONE_LABEL[id]}. Double-click to reset.`;
+    split.setAttribute('aria-label', split.title);
+    split.addEventListener('pointerdown', (event) => onEndDown(event, split, id));
+    split.addEventListener('dblclick', () => {
+      state.size[id] = DEFAULT_SIZE[id];
+      applyMetrics();
+      saveLayout(state);
+    });
+    split.addEventListener('keydown', (event) => {
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (!mq.matches) return;
+      const step = event.shiftKey ? 48 : 24;
+      if (event.key === 'ArrowDown') state.size[id] = sizeForHeight(id, heightFor(id) + step);
+      else if (event.key === 'ArrowUp') state.size[id] = sizeForHeight(id, heightFor(id) - step);
+      else return;
+      event.preventDefault();
+      applyMetrics();
+      saveLayout(state);
+    });
+    return split;
+  }
+
+  function onEndDown(event: PointerEvent, split: HTMLElement, id: DeskZoneId): void {
+    if (!mq.matches || event.button !== 0) return;
+    event.preventDefault();
+    split.setPointerCapture(event.pointerId);
+    split.classList.add('is-active');
+    const startY = event.clientY;
+    const startPx = zones[id].getBoundingClientRect().height;
+    const move = (ev: PointerEvent) => {
+      state.size[id] = sizeForHeight(id, Math.max(MIN_PANE_PX, startPx + (ev.clientY - startY)));
+      applyMetrics();
+    };
+    const up = () => {
+      split.classList.remove('is-active');
+      split.removeEventListener('pointermove', move);
+      split.removeEventListener('pointerup', up);
+      split.removeEventListener('pointercancel', up);
+      saveLayout(state);
+    };
+    split.addEventListener('pointermove', move);
+    split.addEventListener('pointerup', up);
+    split.addEventListener('pointercancel', up);
   }
 
   function onColDown(event: PointerEvent, split: HTMLElement): void {
