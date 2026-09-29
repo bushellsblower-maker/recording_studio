@@ -5,6 +5,7 @@ import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, forma
 import type { EngineSnapshot, FolderId, InputMode, LaunchQuant, Levels, MicState, SynthSettings, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
+import type { KeyVoiceRequest } from '../audio/voices';
 import { attachDeskLayout } from './desk-layout';
 import { buildDevices } from './devices';
 import { buildLibrary } from './library';
@@ -76,7 +77,8 @@ export interface ConsoleHandlers {
   loopSelection: (startBeat: number, lengthBeats: number) => void;
   previewSample: (id: string) => void;
   loadSample: (id: string) => void;
-  triggerSample: (id: string) => void;
+  triggerSample: (id: string, velocity?: number) => void;
+  setKeyVoice: (voice: KeyVoiceRequest) => void;
   noteOn: (midi: number, velocity?: number) => void;
   noteOff: (midi: number) => void;
   redo: () => void;
@@ -560,6 +562,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     preview: handlers.previewSample,
     load: handlers.loadSample,
     trigger: handlers.triggerSample,
+    setKeyVoice: handlers.setKeyVoice,
     noteOn: handlers.noteOn,
     noteOff: handlers.noteOff,
   });
@@ -1064,7 +1067,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the desk synth (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
+    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
   footer.append(footerSummary, footerCopy);
 
   const desk = document.createElement('div');

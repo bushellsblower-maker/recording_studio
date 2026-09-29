@@ -1,9 +1,11 @@
 import type { SampleMeta } from '../audio/library';
+import { PAD_KITS, chromaticBanks, parseSampleNote, resolveKit, type ChromaticBank, type KeyVoiceRequest } from '../audio/voices';
 
 export interface LibraryHandlers {
   preview: (id: string) => void;
   load: (id: string) => void;
   trigger: (id: string, velocity?: number) => void;
+  setKeyVoice: (voice: KeyVoiceRequest) => void;
   noteOn: (midi: number, velocity?: number) => void;
   noteOff: (midi: number) => void;
 }
@@ -20,6 +22,7 @@ const CATEGORY_ORDER = ['Drums', 'Perc', 'Bass', 'Keys', 'Vocal', 'FX', 'Ambienc
 const PAGE = 48;
 const PAD_COUNT = 8;
 const FAV_KEY = 'rs4-favs';
+const PERFORM_KEY = 'rs4-perform';
 const WHITE_NOTES = [60, 62, 64, 65, 67, 69, 71, 72];
 const BLACK_NOTES: Array<{ midi: number; left: string }> = [
   { midi: 61, left: '12.5%' },
@@ -119,22 +122,41 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   playTitle.textContent = 'Perform';
   const playHint = document.createElement('p');
   playHint.className = 'note';
-  playHint.textContent = 'Drum rack: pads quantize to the beat while the transport is running. Higher on a pad or key is softer. Drop a sound on a pad to assign it. A–K plays the desk synth. Shift is a softer velocity.';
+  playHint.textContent = 'Each pad plays its sample. Pick a kit or choose a one-shot per pad. The Voice menu switches the keys between the desk synth and sample banks. Higher on a pad or key is softer.';
   playHead.append(playTitle);
+  const kitLabel = document.createElement('label');
+  kitLabel.className = 'kit-pick';
+  const kitName = document.createElement('span');
+  kitName.textContent = 'Kit';
+  const kitPick = document.createElement('select');
+  kitPick.setAttribute('aria-label', 'Drum kit mapping');
+  kitLabel.append(kitName, kitPick);
   const pads = document.createElement('div');
   pads.className = 'pads';
+  const padRack = document.createElement('div');
+  padRack.className = 'pad-rack';
+  padRack.append(kitLabel, pads);
   const keys = document.createElement('div');
   keys.className = 'keys-wrap';
+  const voiceLabel = document.createElement('label');
+  voiceLabel.className = 'voice-pick';
+  const voiceName = document.createElement('span');
+  voiceName.textContent = 'Voice';
+  const voicePick = document.createElement('select');
+  voicePick.setAttribute('aria-label', 'Keyboard voice');
+  voiceLabel.append(voiceName, voicePick);
   const keysLabel = document.createElement('p');
   keysLabel.className = 'group-label';
   keysLabel.textContent = 'Keys';
   const piano = document.createElement('div');
   piano.className = 'piano';
-  keys.append(piano);
-  play.append(playHead, playHint, pads, keysLabel, keys);
+  keys.append(voiceLabel, piano);
+  play.append(playHead, playHint, padRack, keysLabel, keys);
 
   const padButtons: HTMLButtonElement[] = [];
+  const padPicks: HTMLSelectElement[] = [];
   const padIds: Array<string | null> = Array.from({ length: PAD_COUNT }, () => null);
+  let banks: ChromaticBank[] = [];
   const keyButtons = new Map<number, HTMLButtonElement>();
 
   let samples: SampleMeta[] = [];
@@ -164,30 +186,58 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     paintGrid();
   });
 
+  kitPick.addEventListener('change', () => {
+    if (kitPick.value === 'custom') return;
+    const kit = PAD_KITS.find((item) => item.id === kitPick.value);
+    if (!kit) return;
+    resolveKit(kit.pads, samples, PAD_COUNT).forEach((id, index) => assignPad(index, id, false));
+    syncKitSelect();
+    savePerform();
+  });
+  voicePick.addEventListener('change', () => {
+    applyVoice();
+    savePerform();
+  });
+
   for (let index = 0; index < PAD_COUNT; index += 1) {
+    const cell = document.createElement('div');
+    cell.className = 'pad-cell';
     const pad = document.createElement('button');
     pad.type = 'button';
     pad.className = 'pad';
     pad.textContent = `Pad ${index + 1}`;
+    const pick = document.createElement('select');
+    pick.className = 'pad-pick';
+    pick.setAttribute('aria-label', `Pad ${index + 1} sample`);
     pad.addEventListener('pointerdown', (event) => {
       const id = padIds[index];
       if (!id) return;
       handlers.trigger(id, velocityAt(event, pad));
     });
-    pad.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      pad.classList.add('is-drop');
+    pick.addEventListener('change', () => {
+      if (!pick.value) return;
+      assignPad(index, pick.value);
     });
-    pad.addEventListener('dragleave', () => pad.classList.remove('is-drop'));
-    pad.addEventListener('drop', (event) => {
+    const takeDrop = (event: DragEvent): void => {
       event.preventDefault();
       pad.classList.remove('is-drop');
       const id = event.dataTransfer?.getData('application/x-rs-sample');
       if (!id) return;
       assignPad(index, id);
+    };
+    cell.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      pad.classList.add('is-drop');
     });
-    pads.append(pad);
+    cell.addEventListener('dragleave', (event) => {
+      if (event.relatedTarget instanceof Node && cell.contains(event.relatedTarget)) return;
+      pad.classList.remove('is-drop');
+    });
+    cell.addEventListener('drop', takeDrop);
+    cell.append(pad, pick);
+    pads.append(cell);
     padButtons.push(pad);
+    padPicks.push(pick);
   }
 
   for (const midi of WHITE_NOTES) {
@@ -403,6 +453,11 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
       selected = sample.id;
       loadBtn.disabled = false;
       paintGrid();
+      syncBrowserOption();
+      if (voicePick.value === 'sample') {
+        applyVoice();
+        savePerform();
+      }
       handlers.preview(sample.id);
     });
     main.addEventListener('dblclick', () => handlers.load(sample.id));
@@ -429,28 +484,50 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     return chip;
   }
 
-  function assignPad(index: number, id: string): void {
+  function assignPad(index: number, id: string, persist = true): void {
     const sample = samples.find((item) => item.id === id);
     if (!sample) return;
     padIds[index] = id;
     const pad = padButtons[index];
-    if (!pad) return;
-    pad.textContent = sample.name;
-    pad.title = `Trigger ${sample.name}`;
+    if (pad) {
+      pad.textContent = sample.name;
+      pad.title = `Trigger ${sample.name}`;
+    }
+    const pick = padPicks[index];
+    if (pick) {
+      ensurePadOption(pick, sample);
+      pick.value = id;
+    }
+    if (!persist) return;
+    syncKitSelect();
+    savePerform();
   }
 
   function setCatalog(next: SampleMeta[]): void {
     samples = next;
+    banks = chromaticBanks(samples);
     limit = PAGE;
     const total = samples.length;
     creditCopy.textContent = `${total} sounds, CC0. Recorded drums are trimmed Virtuosity Drums excerpts performed by Austin McMahon at Virtuosity Musical Instruments, Boston, published by Versilian Studios. Loops marked recorded sequence those hits; percussion loops also layer original shaker and conga synthesis. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and shuffle, bass, and pad loops are original synthesis dedicated to CC0 for this console. Formant chops are not a recorded singer. See ATTRIBUTION.md for every file.`;
     paintCats();
     paintFilters();
+    fillPadPicks();
+    paintVoices();
+    const memory = readPerform();
+    if (memory.sampleId && samples.some((sample) => sample.id === memory.sampleId)) {
+      selected = memory.sampleId;
+      loadBtn.disabled = false;
+    }
+    const remembered = memory.pads.filter((id) => samples.some((sample) => sample.id === id));
+    const acoustic = PAD_KITS[0];
+    const initial = remembered.length === PAD_COUNT ? remembered : resolveKit(acoustic ? acoustic.pads : [], samples, PAD_COUNT);
+    initial.forEach((id, index) => assignPad(index, id, false));
+    syncKitSelect();
+    syncBrowserOption();
+    if (memory.voice && [...voicePick.options].some((option) => option.value === memory.voice)) voicePick.value = memory.voice;
+    else voicePick.value = 'synth';
+    applyVoice();
     paintGrid();
-    const defaults = ['kick', 'snare', 'hat', 'stick', 'tom-lo', 'bass-c', 'key-c', 'shaker'];
-    defaults.forEach((id, index) => {
-      if (samples.some((sample) => sample.id === id)) assignPad(index, id);
-    });
   }
 
   function setTarget(index: number): void {
@@ -470,9 +547,108 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     count.textContent = 'Library unavailable';
   }
 
+  function fillPadPicks(): void {
+    const oneshots = samples.filter((sample) => sample.kind === 'oneshot');
+    const groups = [...new Set(oneshots.map((sample) => sample.category))];
+    for (const pick of padPicks) {
+      pick.replaceChildren();
+      for (const category of groups) {
+        const group = document.createElement('optgroup');
+        group.label = category;
+        for (const sample of oneshots) {
+          if (sample.category !== category) continue;
+          group.append(option(sample.id, sample.name));
+        }
+        pick.append(group);
+      }
+    }
+  }
+
+  function ensurePadOption(pick: HTMLSelectElement, sample: SampleMeta): void {
+    if ([...pick.options].some((item) => item.value === sample.id)) return;
+    pick.append(option(sample.id, sample.name));
+  }
+
+  function paintKits(): void {
+    const current = kitPick.value;
+    kitPick.replaceChildren();
+    kitPick.append(option('custom', 'Custom'));
+    for (const kit of PAD_KITS) kitPick.append(option(kit.id, kit.name));
+    if ([...kitPick.options].some((item) => item.value === current)) kitPick.value = current;
+  }
+
+  function paintVoices(): void {
+    const current = voicePick.value;
+    voicePick.replaceChildren();
+    voicePick.append(option('synth', 'Desk synth'));
+    for (const bank of banks) voicePick.append(option(`bank:${bank.id}`, bank.name));
+    voicePick.append(option('sample', 'Browser sound'));
+    if ([...voicePick.options].some((item) => item.value === current)) voicePick.value = current;
+  }
+
+  function syncBrowserOption(): void {
+    const optionEl = [...voicePick.options].find((item) => item.value === 'sample');
+    if (!optionEl) return;
+    const sample = samples.find((item) => item.id === selected);
+    optionEl.textContent = sample ? `Browser · ${sample.name}` : 'Browser sound';
+  }
+
+  function applyVoice(): void {
+    const choice = voicePick.value;
+    if (choice === 'synth') {
+      handlers.setKeyVoice({ kind: 'synth' });
+      return;
+    }
+    if (choice === 'sample') {
+      const sample = samples.find((item) => item.id === selected);
+      if (!sample) {
+        handlers.setKeyVoice({ kind: 'synth' });
+        return;
+      }
+      handlers.setKeyVoice({ kind: 'layers', layers: [{ id: sample.id, rootMidi: parseSampleNote(sample.id)?.rootMidi ?? 60 }] });
+      return;
+    }
+    const bank = banks.find((item) => `bank:${item.id}` === choice);
+    if (!bank) {
+      handlers.setKeyVoice({ kind: 'synth' });
+      return;
+    }
+    handlers.setKeyVoice({ kind: 'layers', layers: bank.layers });
+  }
+
+  function syncKitSelect(): void {
+    const ids = padIds.map((id) => id ?? '');
+    const match = PAD_KITS.find((kit) => kit.pads.length === ids.length && kit.pads.every((id, index) => id === ids[index]));
+    kitPick.value = match ? match.id : 'custom';
+  }
+
+  function savePerform(): void {
+    try {
+      localStorage.setItem(
+        PERFORM_KEY,
+        JSON.stringify({
+          pads: padIds.filter((id): id is string => Boolean(id)),
+          voice: voicePick.value || 'synth',
+          sampleId: selected || undefined,
+        }),
+      );
+    } catch {
+      // Private mode can reject storage; the rack still works until reload.
+    }
+  }
+
+  function option(value: string, label: string): HTMLOptionElement {
+    const item = document.createElement('option');
+    item.value = value;
+    item.textContent = label;
+    return item;
+  }
+
   paintCats();
   paintFilters();
   paintGrid();
+  paintKits();
+  paintVoices();
   setTarget(0);
 
   return { element, play, setCatalog, setTarget, fail };
@@ -489,6 +665,21 @@ function metaLine(sample: SampleMeta): string {
   if (sample.credit === 'virtuosity') bits.push('recorded');
   else if (sample.credit === 'original') bits.push('synth');
   return bits.join(' · ');
+}
+
+function readPerform(): { pads: string[]; voice: string; sampleId: string } {
+  try {
+    const raw = localStorage.getItem(PERFORM_KEY);
+    if (!raw) return { pads: [], voice: '', sampleId: '' };
+    const parsed = JSON.parse(raw) as { pads?: unknown; voice?: unknown; sampleId?: unknown };
+    return {
+      pads: Array.isArray(parsed.pads) ? parsed.pads.filter((id): id is string => typeof id === 'string') : [],
+      voice: typeof parsed.voice === 'string' ? parsed.voice : '',
+      sampleId: typeof parsed.sampleId === 'string' ? parsed.sampleId : '',
+    };
+  } catch {
+    return { pads: [], voice: '', sampleId: '' };
+  }
 }
 
 function readFavs(): string[] {

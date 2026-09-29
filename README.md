@@ -23,7 +23,7 @@ Track 1 starts armed. The tone generator is the default input, and a CC0 session
 4. Press **Record**, then **Stop**, to print the armed tracks. Audio 1–4 print the channel. Inst 5–8 print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
 
-The on-screen keys (or A–K on the computer keyboard) play the desk synth through the master. Velocity follows where you press a key or pad; Shift is softer. **MIDI** listens for a Web MIDI keyboard. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
+**Perform** is the pad rack and keys. Pads start on an acoustic drum kit (kick, snare, hat, open hat, toms, crash, ride). The **Kit** menu also loads an electro kit or a percussion rack, and each pad has its own sample menu. Drop a browser sound on a pad to assign it. The **Voice** menu switches the keys between the desk synth and chromatic sample banks (EP, saw, sub, pluck, bass, keys, vox). **Browser** plays the sound selected in the library, at its own pitch on the named note and transposed from there. A–K and the on-screen keys play that voice. Velocity follows where you press a key or pad; Shift is softer. **MIDI** uses the same voice. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
 
 ### With a microphone
 

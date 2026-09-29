@@ -2,6 +2,7 @@ import './style.css';
 import { StudioEngine } from './audio/engine';
 import { SampleBank, type SampleMeta } from './audio/library';
 import { openMidi } from './audio/midi';
+import type { KeyVoiceRequest } from './audio/voices';
 import type { ConsoleView } from './ui/view';
 import { buildView } from './ui/view';
 
@@ -157,8 +158,8 @@ api.view = buildView({
   synth: (partial) => api.engine?.setSynth(partial),
   enableMidi: () => {
     void openMidi(
-      (midi, velocity) => api.engine?.noteOn(midi, velocity),
-      (midi) => api.engine?.noteOff(midi),
+      (midi, velocity) => playNote(midi, velocity),
+      (midi) => releaseNote(midi),
     )
       .then((count) => {
         api.view?.setStatus(count ? `MIDI connected (${count} input${count === 1 ? '' : 's'}).` : 'No MIDI inputs were found.');
@@ -179,9 +180,97 @@ api.view = buildView({
   triggerSample: (id, velocity = 0.9) => {
     void withSample(id, (_meta, buffer) => api.engine?.triggerBuffer(buffer, api.view?.quantizeOn() ?? true, velocity));
   },
-  noteOn: (midi, velocity) => api.engine?.noteOn(midi, velocity),
-  noteOff: (midi) => api.engine?.noteOff(midi),
+  setKeyVoice: (voice) => {
+    keyVoice = voice;
+    voiceTicket += 1;
+    appliedTicket = -1;
+    const engine = api.engine;
+    if (!engine) return;
+    if (voice.kind === 'synth') {
+      engine.setKeyLayers(null);
+      appliedTicket = voiceTicket;
+      return;
+    }
+    if (engine.audioContext()) void applyKeyVoice();
+  },
+  noteOn: (midi, velocity) => playNote(midi, velocity),
+  noteOff: (midi) => releaseNote(midi),
 });
+
+let keyVoice: KeyVoiceRequest = { kind: 'synth' };
+let voiceTicket = 0;
+let appliedTicket = 0;
+let applyingVoice: Promise<void> | null = null;
+const pendingNotes = new Set<number>();
+
+function playNote(midi: number, velocity = 0.9): void {
+  const engine = api.engine;
+  if (!engine) return;
+  if (keyVoice.kind === 'synth' || !engine.audioContext()) {
+    engine.noteOn(midi, velocity);
+    return;
+  }
+  if (appliedTicket === voiceTicket) {
+    engine.noteOn(midi, velocity);
+    return;
+  }
+  pendingNotes.add(midi);
+  void applyKeyVoice().then(() => {
+    if (!pendingNotes.has(midi)) return;
+    engine.noteOn(midi, velocity);
+  });
+}
+
+function releaseNote(midi: number): void {
+  pendingNotes.delete(midi);
+  api.engine?.noteOff(midi);
+}
+
+function applyKeyVoice(): Promise<void> {
+  if (keyVoice.kind !== 'synth' && !api.engine?.audioContext()) return Promise.resolve();
+  if (applyingVoice) {
+    return applyingVoice.then(() => {
+      if (appliedTicket !== voiceTicket) return applyKeyVoice();
+    });
+  }
+  applyingVoice = loadKeyVoice().finally(() => {
+    applyingVoice = null;
+  });
+  return applyingVoice;
+}
+
+async function loadKeyVoice(): Promise<void> {
+  const engine = api.engine;
+  const view = api.view;
+  if (!engine || !view) return;
+  const ticket = voiceTicket;
+  if (keyVoice.kind === 'synth') {
+    engine.setKeyLayers(null);
+    appliedTicket = ticket;
+    return;
+  }
+  const ctx = engine.audioContext();
+  if (!ctx) return;
+  const loaded: Array<{ buffer: AudioBuffer; rootMidi: number }> = [];
+  for (const layer of keyVoice.layers) {
+    if (ticket !== voiceTicket) return;
+    const meta = bank.meta(layer.id);
+    if (!meta) continue;
+    try {
+      loaded.push({ buffer: await bank.buffer(ctx, meta), rootMidi: layer.rootMidi });
+    } catch {
+      view.setStatus(`Could not decode ${meta.name}.`);
+    }
+  }
+  if (ticket !== voiceTicket) return;
+  if (loaded.length === 0) {
+    engine.setKeyLayers(null);
+    view.setStatus('That voice did not load. Keys stay on the desk synth.');
+  } else {
+    engine.setKeyLayers(loaded);
+  }
+  appliedTicket = ticket;
+}
 
 const view = api.view;
 const engine = api.engine;
