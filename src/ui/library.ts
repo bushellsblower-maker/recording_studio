@@ -1,4 +1,5 @@
 import type { SampleMeta } from '../audio/library';
+import { formatLength } from '../audio/units';
 import { PAD_KITS, chromaticBanks, parseSampleNote, resolveKit, type ChromaticBank, type KeyVoiceRequest } from '../audio/voices';
 
 export interface LibraryHandlers {
@@ -443,7 +444,8 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     main.type = 'button';
     main.className = 'sample-main';
     main.draggable = true;
-    const tip = `${sample.name} — ${metaLine(sample)}`;
+    const length = typeof sample.seconds === 'number' ? formatLength(sample.seconds) : '';
+    const tip = length ? `${sample.name} — ${length} — ${metaLine(sample)}` : `${sample.name} — ${metaLine(sample)}`;
     main.title = tip;
     main.setAttribute('aria-label', tip);
     const mark = document.createElement('span');
@@ -453,7 +455,11 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     const name = document.createElement('span');
     name.className = 'sample-name';
     name.textContent = sample.name;
+    const duration = document.createElement('span');
+    duration.className = 'sample-length';
+    duration.textContent = length;
     main.append(mark, name);
+    if (length) main.append(duration);
     main.addEventListener('click', () => {
       selected = sample.id;
       loadBtn.disabled = false;

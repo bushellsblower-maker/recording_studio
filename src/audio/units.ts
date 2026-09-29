@@ -22,6 +22,17 @@ export function formatTime(seconds: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(whole).padStart(2, '0')}.${tenths}`;
 }
 
+/** Short length for tiles and clip bars, such as 1.08s. */
+export function formatLength(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0s';
+  if (seconds < 0.01) return `${seconds.toFixed(3)}s`;
+  if (seconds < 10) return `${seconds.toFixed(2)}s`;
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.round(seconds % 60);
+  return `${minutes}:${String(rest).padStart(2, '0')}`;
+}
+
 export function formatDb(db: number): string {
   if (db <= -59.5) return '-inf';
   const rounded = Math.round(db * 10) / 10;
