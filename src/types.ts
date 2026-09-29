@@ -1,3 +1,5 @@
+import type { PluginKind } from './audio/plugins';
+
 export const TRACK_COUNT = 8;
 
 export type InputMode = 'mic' | 'tone' | 'both';
@@ -10,6 +12,41 @@ export type TrackKind = 'audio' | 'instrument';
 
 export type MicState = 'off' | 'pending' | 'on' | 'denied' | 'missing' | 'busy' | 'error';
 
+export interface AutoPoint {
+  beat: number;
+  value: number;
+}
+
+export interface InsertSnapshot {
+  kind: PluginKind;
+  bypass: boolean;
+  params: Record<string, number>;
+}
+
+export interface SlotSnapshot {
+  name: string;
+  hasAudio: boolean;
+}
+
+export interface MarkerSnapshot {
+  id: string;
+  beat: number;
+  name: string;
+}
+
+export type LaunchQuant = 'beat' | 'bar';
+
+export type FolderId = 0 | 1 | 2;
+
+export interface SynthSettings {
+  wave: OscillatorType;
+  cutoff: number;
+  resonance: number;
+  attack: number;
+  release: number;
+  level: number;
+}
+
 export interface TrackSnapshot {
   armed: boolean;
   muted: boolean;
@@ -19,6 +56,19 @@ export interface TrackSnapshot {
   name: string;
   kind: TrackKind;
   startBeat: number;
+  mono: boolean;
+  folder: FolderId;
+  delaySend: number;
+  reverbSend: number;
+  fadeInBeats: number;
+  fadeOutBeats: number;
+  lengthBeats: number;
+  inserts: (InsertSnapshot | null)[];
+  slots: (SlotSnapshot | null)[];
+  sessionSlot: number | null;
+  volumeAuto: AutoPoint[];
+  panAuto: AutoPoint[];
+  fxAuto: AutoPoint[];
 }
 
 export interface EngineSnapshot {
@@ -39,6 +89,13 @@ export interface EngineSnapshot {
   playToBeat: number;
   rangeCustom: boolean;
   canUndo: boolean;
+  canRedo: boolean;
+  countIn: boolean;
+  punch: boolean;
+  launchQuant: LaunchQuant;
+  cueBeat: number;
+  markers: MarkerSnapshot[];
+  synth: SynthSettings;
 }
 
 export interface Levels {

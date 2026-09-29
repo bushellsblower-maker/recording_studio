@@ -1,9 +1,11 @@
 import type { SampleMeta } from '../audio/library';
+import type { PluginKind } from '../audio/plugins';
 import { DEFAULTS, RANGES } from '../defaults';
 import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
-import type { EngineSnapshot, InputMode, Levels, MicState, ToneShape } from '../types';
+import type { EngineSnapshot, FolderId, InputMode, LaunchQuant, Levels, MicState, SynthSettings, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
+import { buildDevices } from './devices';
 import { buildLibrary } from './library';
 
 export interface ConsoleHandlers {
@@ -74,8 +76,40 @@ export interface ConsoleHandlers {
   previewSample: (id: string) => void;
   loadSample: (id: string) => void;
   triggerSample: (id: string) => void;
-  noteOn: (midi: number) => void;
+  noteOn: (midi: number, velocity?: number) => void;
   noteOff: (midi: number) => void;
+  redo: () => void;
+  tap: () => void;
+  countIn: (on: boolean) => void;
+  punch: (on: boolean) => void;
+  saveProject: () => void;
+  loadProject: () => void;
+  bounce: () => void;
+  stems: () => void;
+  addMarker: () => void;
+  removeMarker: (id: string) => void;
+  locate: (beat: number) => void;
+  editClipEdge: (index: number, edge: 'start' | 'end' | 'fade-in' | 'fade-out', beat: number) => void;
+  setInsert: (track: number, slot: number, kind: PluginKind | null) => void;
+  moveInsert: (track: number, from: number, to: number) => void;
+  bypassInsert: (track: number, slot: number, bypass: boolean) => void;
+  insertParam: (track: number, slot: number, id: string, value: number) => void;
+  insertPreset: (track: number, slot: number, name: string) => void;
+  trackSend: (track: number, which: 'delay' | 'reverb', amount: number) => void;
+  trackMono: (track: number, mono: boolean) => void;
+  trackFolder: (track: number, folder: FolderId) => void;
+  muteFolder: (folder: 1 | 2) => void;
+  copySlot: (track: number, slot: number) => void;
+  clearSlot: (track: number, slot: number) => void;
+  launchSlot: (track: number, slot: number) => void;
+  launchScene: (slot: number) => void;
+  backToArrangement: () => void;
+  launchQuant: (quant: LaunchQuant) => void;
+  autoPoint: (track: number, lane: 'volume' | 'pan' | 'fx', beat: number, value: number) => void;
+  removeAuto: (track: number, lane: 'volume' | 'pan' | 'fx', beat: number) => void;
+  clearAuto: (track: number, lane: 'volume' | 'pan' | 'fx') => void;
+  synth: (partial: Partial<SynthSettings>) => void;
+  enableMidi: () => void;
 }
 
 export interface PaintFrame extends Levels {
@@ -87,6 +121,9 @@ export interface PaintFrame extends Levels {
   durations: readonly number[];
   peaks: readonly (readonly number[])[];
   trackLevels: readonly number[];
+  trackRms: readonly number[];
+  reductions: readonly number[];
+  eq: readonly number[] | null;
   bpm: number;
   spans: readonly { startBeat: number; lengthBeats: number }[];
   loopStartBeat: number;
@@ -109,6 +146,7 @@ export interface ConsoleView {
   catalogFailed: (message: string) => void;
   setBpm: (bpm: number) => void;
   targetTrack: () => number;
+  focusTrack: (index: number) => void;
   quantizeOn: () => boolean;
 }
 
@@ -181,11 +219,13 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const stop = button('STOP', 'btn stop');
   const play = button('PLAY', 'btn play');
   const undo = button('UNDO', 'btn small');
+  const redo = button('REDO', 'btn small');
   const reset = button('RESET', 'btn reset');
   rec.addEventListener('click', handlers.record);
   stop.addEventListener('click', handlers.stop);
   play.addEventListener('click', handlers.play);
   undo.addEventListener('click', handlers.undo);
+  redo.addEventListener('click', handlers.redo);
   reset.addEventListener('click', handlers.reset);
 
   const metro = button('METRO', 'btn small');
@@ -209,11 +249,47 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   transport.className = 'transport panel';
   const transportButtons = document.createElement('div');
   transportButtons.className = 'transport-buttons';
-  transportButtons.append(rec, stop, play, undo, reset);
+  transportButtons.append(rec, stop, play, undo, redo, reset);
   const metroBox = document.createElement('div');
   metroBox.className = 'metro';
+  const tap = button('TAP', 'btn small');
+  tap.title = 'Tap tempo';
+  tap.addEventListener('click', handlers.tap);
+  const countIn = button('COUNT', 'btn small');
+  countIn.title = 'One-bar count-in before recording';
+  countIn.addEventListener('click', () => {
+    if (!last) return;
+    handlers.countIn(!last.countIn);
+  });
+  const punch = button('PUNCH', 'btn small');
+  punch.title = 'Record inside the play range. Adds a one-bar pre-roll when the range starts after bar 1.';
+  punch.addEventListener('click', () => {
+    if (!last) return;
+    handlers.punch(!last.punch);
+  });
+  const mark = button('MARK', 'btn small');
+  mark.title = 'Drop a locator at the playhead or cue';
+  mark.addEventListener('click', handlers.addMarker);
+  const saveProject = button('SAVE', 'btn small');
+  saveProject.title = 'Save the project in this browser';
+  saveProject.addEventListener('click', handlers.saveProject);
+  const loadProject = button('LOAD', 'btn small');
+  loadProject.title = 'Load the project saved in this browser';
+  loadProject.addEventListener('click', handlers.loadProject);
+  const bounce = button('BOUNCE', 'btn small');
+  bounce.title = 'Render the mix through inserts, fades, sends, and the master';
+  bounce.addEventListener('click', handlers.bounce);
+  const stems = button('STEMS', 'btn small');
+  stems.title = 'Download each track through its inserts, fades, level, and pan';
+  stems.addEventListener('click', handlers.stems);
+  const midiBtn = button('MIDI', 'btn small');
+  midiBtn.title = 'Listen to a Web MIDI keyboard';
+  midiBtn.addEventListener('click', handlers.enableMidi);
+  const workflow = document.createElement('div');
+  workflow.className = 'transport-buttons';
+  workflow.append(tap, countIn, punch, mark, saveProject, loadProject, bounce, stems, midiBtn);
   metroBox.append(metro, quantize, bpm.root, metroLevel.root);
-  transport.append(transportButtons, metroBox);
+  transport.append(transportButtons, metroBox, workflow);
 
   const micButton = button('Enable microphone', 'btn small wide');
   const voice = checkbox('Browser voice processing (echo / noise / AGC)', DEFAULTS.voiceProcessing);
@@ -425,7 +501,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   trackList.className = 'tracks';
   let arrangeBeats = 16;
   const dragBeats = new Map<number, number>();
-  let dragging: { index: number; origin: number; grab: number } | null = null;
+  let dragging: { index: number; origin: number; grab: number; mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' } | null = null;
   let loopPreview: { startBeat: number; endBeat: number } | null = null;
   let rulerAnchor = 0;
   let rulerActive = false;
@@ -571,9 +647,11 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     mix.append(levelWrap, panWrap);
     const meterFill = document.createElement('div');
     meterFill.className = 'mini-meter-fill';
+    const rmsFill = document.createElement('div');
+    rmsFill.className = 'mini-meter-fill rms';
     const meter = document.createElement('div');
     meter.className = 'mini-meter';
-    meter.append(meterFill);
+    meter.append(rmsFill, meterFill);
     mix.append(meter);
     const canvas = document.createElement('canvas');
     canvas.className = 'wave';
@@ -625,22 +703,31 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       if (!span || span.lengthBeats <= 0) return;
       const beat = beatFromClient(canvas, event.clientX);
       const origin = dragBeats.get(index) ?? span.startBeat;
-      if (beat < origin - 0.05 || beat > origin + span.lengthBeats) return;
-      dragging = { index, origin, grab: beat - origin };
+      const end = origin + span.lengthBeats;
+      if (beat < origin - 0.05 || beat > end + 0.05) return;
+      const rect = canvas.getBoundingClientRect();
+      const edge = Math.max(0.2, (12 / Math.max(1, rect.width)) * arrangeBeats);
+      let mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' = 'move';
+      if (event.altKey) mode = beat < origin + span.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
+      else if (beat <= origin + edge) mode = 'start';
+      else if (beat >= end - edge) mode = 'end';
+      dragging = { index, origin, grab: beat - origin, mode };
       canvas.setPointerCapture(event.pointerId);
       event.preventDefault();
       event.stopPropagation();
     });
     canvas.addEventListener('pointermove', (event) => {
       if (!dragging || dragging.index !== index || !canvas.hasPointerCapture(event.pointerId)) return;
-      dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, event.shiftKey));
+      if (dragging.mode === 'move') dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, event.shiftKey));
     });
     const finishDrag = (event: PointerEvent): void => {
       if (!dragging || dragging.index !== index) return;
-      const beat = dragBeats.get(index) ?? dragging.origin;
+      const mode = dragging.mode;
+      const beat = mode === 'move' ? (dragBeats.get(index) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), event.shiftKey);
       dragging = null;
       dragBeats.delete(index);
-      handlers.trackStart(index, beat);
+      if (mode === 'move') handlers.trackStart(index, beat);
+      else handlers.editClipEdge(index, mode, beat);
       event.stopPropagation();
     };
     canvas.addEventListener('pointerup', finishDrag);
@@ -651,7 +738,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     });
     rowEl.append(id, toggles, mix, canvas, time, actions);
     trackList.append(rowEl);
-    tracks.push({ row: rowEl, arm, mute, solo, kind, clip, canvas, time, download, meterFill });
+    tracks.push({ row: rowEl, arm, mute, solo, kind, clip, canvas, time, download, meterFill, rmsFill });
   }
 
   function beatFromClient(canvas: HTMLCanvasElement, clientX: number): number {
@@ -665,6 +752,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     targetTrack = index;
     library.setTarget(index);
     tracks.forEach((track, trackIndex) => track.row.classList.toggle('is-target', trackIndex === index));
+    if (last) devices.render(last, index);
   }
 
   const masterMute = button('MUTE', 'btn small');
@@ -796,6 +884,8 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   dual.className = 'dual-range';
   dual.title = 'Left handle is play from, right handle is play to. Drag the bar ruler to set the same span.';
   dual.append(rangeTo, rangeFrom);
+  const markerRow = document.createElement('div');
+  markerRow.className = 'markers';
   playRange.append(rangeName, rangeFromRead, dual, rangeToRead, loopRegion, loopClip, rangeAll);
 
   const arrangeHead = document.createElement('div');
@@ -805,7 +895,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   arrangeHead.append(arrangeTitle);
   const arrangeHint = document.createElement('p');
   arrangeHint.className = 'note';
-  arrangeHint.textContent = 'Drag the play range or the bar ruler to choose where a track starts and stops. Loop region repeats that span. Loop selection repeats the highlighted clip. Shift snaps the ruler to 16ths.';
+  arrangeHint.textContent = 'Drag a clip to move it. Drag the edges to trim, or hold Alt and drag an edge for a fade. Shift snaps to 16ths. Markers jump the cue; Alt-click a marker to remove it.';
 
   const guide = document.createElement('ol');
   guide.className = 'guide';
@@ -849,7 +939,31 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const arrangeZone = document.createElement('section');
   arrangeZone.className = 'zone zone-session';
   attachCollapse(arrangeZone, arrangeHead, 'Arrangement');
-  arrangeZone.append(arrangeHead, playRange, arrangeHint, guideRow, deck);
+  const devices = buildDevices({
+    setInsert: handlers.setInsert,
+    moveInsert: handlers.moveInsert,
+    bypass: handlers.bypassInsert,
+    param: handlers.insertParam,
+    preset: handlers.insertPreset,
+    send: handlers.trackSend,
+    mono: handlers.trackMono,
+    folder: handlers.trackFolder,
+    muteFolder: handlers.muteFolder,
+    copySlot: handlers.copySlot,
+    clearSlot: handlers.clearSlot,
+    launchSlot: handlers.launchSlot,
+    launchScene: handlers.launchScene,
+    back: handlers.backToArrangement,
+    quant: handlers.launchQuant,
+    auto: handlers.autoPoint,
+    removeAuto: handlers.removeAuto,
+    clearAuto: handlers.clearAuto,
+    synth: handlers.synth,
+  });
+  const deviceHead = devices.element.querySelector('.zone-head');
+  if (deviceHead instanceof HTMLElement) attachCollapse(devices.element, deviceHead, 'Devices');
+
+  arrangeZone.append(arrangeHead, playRange, markerRow, arrangeHint, guideRow, deck);
 
   const mixHead = document.createElement('div');
   mixHead.className = 'zone-head';
@@ -878,7 +992,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
 
   const deskStack = document.createElement('div');
   deskStack.className = 'desk-stack';
-  deskStack.append(arrangeZone, mixZone, playZone);
+  deskStack.append(arrangeZone, devices.element, mixZone, playZone);
   const desk = document.createElement('div');
   desk.className = 'desk';
   desk.append(browseZone, deskStack);
@@ -889,7 +1003,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. A–K plays the keys. Drag a sample onto the grid — it snaps to the beat, and Shift snaps to 16ths. Drag a clip to move it. The play range sets where playback starts and stops; Loop region repeats it, and Loop selection repeats the highlighted clip. Drag the bar ruler to set that range. Tracks 1–4 print the channel; 5–8 print pads and keys. Headphones if you raise the monitor.';
+    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the desk synth (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor.';
   footer.append(footerSummary, footerCopy);
 
   const zoneNav = document.createElement('nav');
@@ -989,6 +1103,23 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       paintRangeReadout();
     }
     undo.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping' || !snapshot.canUndo;
+    redo.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping' || !snapshot.canRedo;
+    press(countIn, snapshot.countIn);
+    press(punch, snapshot.punch);
+    markerRow.replaceChildren();
+    for (const marker of snapshot.markers) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'btn tiny marker';
+      chip.textContent = `${marker.name} ${formatBeatPosition(marker.beat)}`;
+      chip.title = 'Jump here. Alt-click removes the marker.';
+      chip.addEventListener('click', (event) => {
+        if (event.altKey) handlers.removeMarker(marker.id);
+        else handlers.locate(marker.beat);
+      });
+      markerRow.append(chip);
+    }
+    devices.render(snapshot, targetTrack);
     gateBtn.disabled = locked || (snapshot.powered && !snapshot.gateAvailable);
     gateNote.hidden = !snapshot.powered || snapshot.gateAvailable;
     snapshot.tracks.forEach((track, index) => {
@@ -1062,14 +1193,17 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     }
     const playhead = frame.playing || frame.recording ? (frame.position * frame.bpm) / 60 : -1;
     const strongRange = frame.looping || loopPreview !== null;
-    drawRuler(rulerCanvas, arrangeBeats, loopStartBeat, loopBeats, playhead, strongRange);
+    drawRuler(rulerCanvas, arrangeBeats, loopStartBeat, loopBeats, playhead, strongRange, last?.markers ?? []);
+    devices.paint({ reductions: frame.reductions, eq: frame.eq ? [...frame.eq] : null });
     tracks.forEach((track, index) => {
       const duration = frame.durations[index] ?? 0;
       const span = spans[index] ?? { startBeat: 0, lengthBeats: 0 };
       track.time.textContent = formatTime(duration);
       const level = frame.trackLevels[index] ?? 0;
       track.meterFill.style.height = `${meterPercent(level)}%`;
+      track.rmsFill.style.height = `${meterPercent(frame.trackRms[index] ?? 0)}%`;
       track.canvas.classList.toggle('is-clip', span.lengthBeats > 0);
+      const fades = last?.tracks[index];
       drawLane(
         track.canvas,
         frame.peaks[index] ?? [],
@@ -1081,6 +1215,9 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
         playhead,
         TRACK_COLORS[index] ?? '#e0a106',
         strongRange,
+        fades?.fadeInBeats ?? 0,
+        fades?.fadeOutBeats ?? 0,
+        fades?.volumeAuto ?? [],
       );
     });
   }
@@ -1096,6 +1233,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     catalogFailed: library.fail,
     setBpm: (value) => bpm.set(value),
     targetTrack: () => targetTrack,
+    focusTrack: (index: number) => chooseTrack(index),
     quantizeOn: () => quantize.getAttribute('aria-pressed') === 'true',
   };
 }
@@ -1111,6 +1249,7 @@ interface TrackRow {
   time: HTMLElement;
   download: HTMLButtonElement;
   meterFill: HTMLElement;
+  rmsFill: HTMLElement;
 }
 
 interface MeterUi {
@@ -1311,6 +1450,7 @@ function drawRuler(
   loopBeats: number,
   playhead: number,
   strong = false,
+  markers: readonly { beat: number; name: string }[] = [],
 ): void {
   const size = resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
@@ -1336,6 +1476,11 @@ function drawRuler(
       ctx.fillText(String(bar + 1), x + 4, size.height / 2);
     }
   }
+  ctx.fillStyle = '#8ecae6';
+  for (const marker of markers) {
+    const x = (marker.beat / viewBeats) * size.width;
+    ctx.fillRect(x, 0, 2, size.height);
+  }
   paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
 }
 
@@ -1350,6 +1495,9 @@ function drawLane(
   playhead: number,
   color: string,
   strong = false,
+  fadeInBeats = 0,
+  fadeOutBeats = 0,
+  volume: readonly { beat: number; value: number }[] = [],
 ): void {
   const size = resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
@@ -1387,6 +1535,34 @@ function drawLane(
       const h = Math.max(1, Math.min(1, peak) * (size.height - 8));
       ctx.fillRect(x0 + x, (size.height - h) / 2, 1, h);
     }
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    if (fadeInBeats > 0) {
+      ctx.beginPath();
+      ctx.moveTo(x0, 2);
+      ctx.lineTo(x0 + (fadeInBeats / viewBeats) * size.width, size.height - 2);
+      ctx.lineTo(x0, size.height - 2);
+      ctx.fill();
+    }
+    if (fadeOutBeats > 0) {
+      const fadeX = x0 + ((lengthBeats - fadeOutBeats) / viewBeats) * size.width;
+      const endX = x0 + clipWidth;
+      ctx.beginPath();
+      ctx.moveTo(fadeX, size.height - 2);
+      ctx.lineTo(endX, 2);
+      ctx.lineTo(endX, size.height - 2);
+      ctx.fill();
+    }
+  }
+  if (volume.length > 1) {
+    ctx.strokeStyle = 'rgba(240, 162, 2, 0.9)';
+    ctx.beginPath();
+    volume.forEach((point, index) => {
+      const x = (point.beat / viewBeats) * size.width;
+      const y = size.height - ((point.value + 60) / 66) * (size.height - 4) - 2;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
   }
   paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
 }

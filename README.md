@@ -23,7 +23,7 @@ Track 1 starts armed. The tone generator is the default input, and a CC0 session
 4. Press **Record**, then **Stop**, to print the armed tracks. Audio 1–4 print the channel. Inst 5–8 print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
 
-The on-screen keys (or A–K on the computer keyboard) play a simple synth through the master. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
+The on-screen keys (or A–K on the computer keyboard) play the desk synth through the master. Velocity follows where you press a key or pad; Shift is softer. **MIDI** listens for a Web MIDI keyboard. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
 
 ### With a microphone
 
@@ -32,13 +32,21 @@ The on-screen keys (or A–K on the computer keyboard) play a simple synth throu
 3. Leave **Monitor** down unless you are wearing headphones.
 4. Arm a track and press **Record**. Tracks that are not armed play back underneath the new take.
 
-Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **Loop region** repeats the play-from / play-to span, and recording stops at the end of that span. **All** clears the range so playback uses the whole arrangement. The channel strip shows the insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
+Space plays or stops. R records. Z undoes and Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **COUNT** gives a one-bar count-in. **PUNCH** records inside the play range and adds a one-bar pre-roll when that range starts later. **Loop region** repeats the play-from / play-to span, and recording stops at the end of that span. **All** clears the range so playback uses the whole arrangement. The channel strip shows the input insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
+
+**Devices** (under the arrangement, and on the Mix tab on a phone) is the per-track rack. Each track has three insert slots. The built-in devices are Channel EQ (with a curve), Compressor (gain-reduction meter), Tape, Chorus, Phaser, Utility (gain and width), and Limiter. They are original Web Audio processors, not commercial plugins. Slots can be bypassed, loaded from a preset, and dragged to reorder. Track delay and reverb sends feed the same returns as the console. Mono sums the channel. Group 1 and Group 2 mute every track assigned to that group.
+
+**Session** holds four scene slots per track. Capture copies the arrangement clip into a slot. Launching a slot, or a whole scene, loops that clip. While the transport is running the launch waits for the next bar or beat. Arrangement returns every track to its timeline clip.
+
+Drag a clip body to move it. Drag either edge to trim. Alt-drag an edge to set a fade. The automation lane writes volume, pan, or the first active insert's main parameter. Volume and pan ride playback and **BOUNCE**. **MARK** drops a locator. Click it to cue playback there. Alt-click removes it.
+
+**SAVE** and **LOAD** keep the project in this browser (IndexedDB): clips, scene slots, mixer, inserts, automation, and markers. **MIX WAV** is the fast sum of the arranged clips. **BOUNCE** renders inserts, fades, sends, volume and pan automation, and the master. **STEMS** downloads each clip through its inserts, fades, level, and pan, without the returns.
 
 ### Desk layout
 
 From about 900px up, the desk is one surface. The banner and transport stay compact across the top. The browser is a column on the left. Arrangement, console, and pads stack on the right, expanded so the lanes and the five console modules (Input, Channel, EQ, Dynamics, FX) fit without an inner horizontal scrollbar. If the desk is taller than the window, the page scrolls once. Each of those zones has Hide / Show so it can collapse. Pads and keys stay a short strip under the console. The layout does not turn into the phone stack between 900px and a wide monitor.
 
-Below 900px the phone layout docks the transport and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the inserts and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
+Below 900px the phone layout docks the transport and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the devices, the inserts, and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
 
 The first-run strip (Pick a sound, Place it, Arm and record, Mix and bounce) jumps to the matching zone. Hide dismisses it on this browser.
 
@@ -67,7 +75,8 @@ mic and/or tone
              |-> master sum
              |-> delay send  -> delay -> master
              |-> reverb send -> convolver -> master
-playback tracks -> mute/solo -> master sum
+playback tracks -> inserts -> fader -> pan -> mute/solo -> master sum
+             |-> delay send and reverb send -> the same returns
 metronome (cue only) -------> master sum
 sample pads and keys -------> master sum, and armed instrument tracks while recording
 master fader -> stereo meters -> safety limiter -> mute -> speakers
@@ -88,7 +97,9 @@ Recorded drums are trimmed excerpts of [Virtuosity Drums](https://github.com/sfz
 - Track audio is 32-bit float in memory and 16-bit stereo PCM on disk. A few minutes on eight tracks is hundreds of megabytes.
 - The metronome is a cue. It is not recorded. Library loops ship at 80, 90, 100, 110, 120, 128, and 140 BPM. Loading one sets the session tempo, and playback pitch follows the click.
 - Armed tracks of the same type receive the same bus. Audio tracks print the channel. Instrument tracks print pads and keys. Arm state and track type are locked while the transport is recording.
-- Each track holds one clip. Drag it on the bar grid to change where it starts. **Undo** restores clips, including their start positions, from before the last record, load, import, or reset.
+- Each track holds one arrangement clip, plus four session slots. Drag the arrangement clip on the bar grid to change where it starts, trim it from either edge, or Alt-drag an edge for a fade. Undo and redo cover clip edits, markers, and scene slots (up to 32 steps). Mixer and insert tweaks are not on that stack.
+- Bounce and stem export use an offline render of the current inserts. They do not print the live input console (preamp, gate, channel EQ). That chain is still what audio tracks record.
+- There is no piano-roll MIDI editor, clip automation recording, multiband compressor, or third-party plugin hosting. The devices in the rack are the built-in Web Audio processors described above.
 - **LOOP** repeats playback across the chosen bars, including clips that start inside the region. A recorded take still runs once and stops at the end of the region, and the new clip starts at the loop.
 - The master path includes a transparent safety limiter after the meters. It only catches overs.
 - If `AudioWorklet` fails to load, the gate is bypassed and recording falls back to `ScriptProcessorNode`.

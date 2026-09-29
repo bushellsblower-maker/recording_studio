@@ -1,6 +1,7 @@
 import './style.css';
 import { StudioEngine } from './audio/engine';
 import { SampleBank, type SampleMeta } from './audio/library';
+import { openMidi } from './audio/midi';
 import type { ConsoleView } from './ui/view';
 import { buildView } from './ui/view';
 
@@ -104,6 +105,66 @@ api.view = buildView({
     else api.view?.setStatus('Mixdown downloaded. It uses track levels, pan, mute, solo, and the master fader.');
   },
   undo: () => api.engine?.undo(),
+  redo: () => api.engine?.redo(),
+  tap: () => api.engine?.tapTempo(),
+  countIn: (on) => api.engine?.setCountIn(on),
+  punch: (on) => api.engine?.setPunch(on),
+  saveProject: () => {
+    void api.engine?.saveProjectFile().catch(() => api.view?.setStatus('Could not save the project in this browser.'));
+  },
+  loadProject: () => {
+    void api.engine?.loadProjectFile().catch(() => api.view?.setStatus('Could not load the saved project.'));
+  },
+  bounce: () => {
+    void api.engine?.bounceMix().then((mix) => {
+      if (!mix) {
+        api.view?.setStatus('Nothing to bounce. Unmute a track that has a clip.');
+        return;
+      }
+      saveBlob(mix.blob, 'rs4-bounce.wav');
+      api.view?.setStatus(
+        mix.silent
+          ? 'Bounce downloaded, but it looks silent.'
+          : 'Bounce downloaded. It includes inserts, fades, sends, automation, and the master.',
+      );
+    });
+  },
+  stems: () => {
+    void downloadStems();
+  },
+  addMarker: () => api.engine?.addMarker(),
+  removeMarker: (id) => api.engine?.removeMarker(id),
+  locate: (beat) => api.engine?.locate(beat),
+  editClipEdge: (index, edge, beat) => api.engine?.editClipEdge(index, edge, beat),
+  setInsert: (track, slot, kind) => api.engine?.setInsert(track, slot, kind),
+  moveInsert: (track, from, to) => api.engine?.moveInsert(track, from, to),
+  bypassInsert: (track, slot, bypass) => api.engine?.setInsertBypass(track, slot, bypass),
+  insertParam: (track, slot, id, value) => api.engine?.setInsertParam(track, slot, id, value),
+  insertPreset: (track, slot, name) => api.engine?.applyInsertPreset(track, slot, name),
+  trackSend: (track, which, amount) => api.engine?.setTrackSend(track, which, amount),
+  trackMono: (track, mono) => api.engine?.setTrackMono(track, mono),
+  trackFolder: (track, folder) => api.engine?.setTrackFolder(track, folder),
+  muteFolder: (folder) => api.engine?.muteFolder(folder),
+  copySlot: (track, slot) => api.engine?.copyClipToSlot(track, slot),
+  clearSlot: (track, slot) => api.engine?.clearSlot(track, slot),
+  launchSlot: (track, slot) => api.engine?.launchSlot(track, slot),
+  launchScene: (slot) => api.engine?.launchScene(slot),
+  backToArrangement: () => api.engine?.backToArrangement(null),
+  launchQuant: (quant) => api.engine?.setLaunchQuant(quant),
+  autoPoint: (track, lane, beat, value) => api.engine?.setAutoPoint(track, lane, beat, value),
+  removeAuto: (track, lane, beat) => api.engine?.removeAutoPoint(track, lane, beat),
+  clearAuto: (track, lane) => api.engine?.clearAutomation(track, lane),
+  synth: (partial) => api.engine?.setSynth(partial),
+  enableMidi: () => {
+    void openMidi(
+      (midi, velocity) => api.engine?.noteOn(midi, velocity),
+      (midi) => api.engine?.noteOff(midi),
+    )
+      .then((count) => {
+        api.view?.setStatus(count ? `MIDI connected (${count} input${count === 1 ? '' : 's'}).` : 'No MIDI inputs were found.');
+      })
+      .catch(() => api.view?.setStatus('Web MIDI is unavailable in this browser.'));
+  },
   loop: (on) => api.engine?.setLoop(on),
   playRange: (fromBeat, toBeat, loop) => api.engine?.setPlayRange(fromBeat, toBeat, loop),
   clearRange: () => api.engine?.clearPlayRange(),
@@ -115,10 +176,10 @@ api.view = buildView({
     const index = api.view?.targetTrack() ?? 0;
     void placeSample(id, index, 0);
   },
-  triggerSample: (id) => {
-    void withSample(id, (_meta, buffer) => api.engine?.triggerBuffer(buffer, api.view?.quantizeOn() ?? true));
+  triggerSample: (id, velocity = 0.9) => {
+    void withSample(id, (_meta, buffer) => api.engine?.triggerBuffer(buffer, api.view?.quantizeOn() ?? true, velocity));
   },
-  noteOn: (midi) => api.engine?.noteOn(midi),
+  noteOn: (midi, velocity) => api.engine?.noteOn(midi, velocity),
   noteOff: (midi) => api.engine?.noteOff(midi),
 });
 
@@ -139,6 +200,8 @@ view.render(engine.snapshot());
 function loop(): void {
   engine.poll();
   const clock = engine.clock();
+  const readings = engine.trackMeterReadings();
+  const device = engine.deviceFrame(view.targetTrack());
   view.paint({
     ...engine.levels(),
     position: clock.seconds,
@@ -148,7 +211,10 @@ function loop(): void {
     sessionLength: engine.sessionLength(),
     durations: engine.durations(),
     peaks: engine.peaks(),
-    trackLevels: engine.trackMeters(),
+    trackLevels: readings.map((reading) => reading.peak),
+    trackRms: readings.map((reading) => reading.rms),
+    reductions: device.reductions,
+    eq: device.eq,
     bpm: engine.bpm(),
     spans: engine.clipSpans(),
     loopStartBeat: engine.loopStartBeat(),
@@ -174,9 +240,27 @@ window.addEventListener('keydown', (event) => {
     const mode = engine.modeName();
     if (mode === 'playing' || mode === 'recording') engine.stop();
     else engine.play();
-  } else if (event.code === 'KeyR' && !event.repeat) {
+  } else if (event.code === 'KeyR' && !event.repeat && !event.metaKey && !event.ctrlKey) {
     event.preventDefault();
     engine.record();
+  } else if (event.code === 'KeyZ' && !event.repeat && !event.metaKey && !event.ctrlKey) {
+    event.preventDefault();
+    if (event.shiftKey) engine.redo();
+    else engine.undo();
+  } else if (event.code === 'KeyB' && !event.repeat) {
+    event.preventDefault();
+    engine.tapTempo();
+  } else if (event.code === 'KeyL' && !event.repeat) {
+    event.preventDefault();
+    engine.setLoop(!engine.isLooping());
+  } else if (event.code === 'KeyM' && !event.repeat) {
+    event.preventDefault();
+    const index = view.targetTrack();
+    const track = engine.snapshot().tracks[index];
+    if (track) engine.setTrackMuted(index, !track.muted);
+  } else if (event.code.startsWith('Digit')) {
+    const index = Number(event.code.slice(5)) - 1;
+    if (index >= 0 && index < 8) view.focusTrack(index);
   }
 });
 
@@ -213,6 +297,23 @@ async function placeSample(id: string, index: number, startBeat = 0): Promise<vo
     if (tempo) view.setBpm(tempo);
     engine.loadClip(index, buffer, { name: meta.name, bpm: tempo, startBeat });
   });
+}
+
+async function downloadStems(): Promise<void> {
+  const engine = api.engine;
+  const view = api.view;
+  if (!engine || !view) return;
+  const tracks = engine.snapshot().tracks;
+  let count = 0;
+  for (let index = 0; index < tracks.length; index += 1) {
+    if (!tracks[index]?.hasAudio) continue;
+    const blob = await engine.bounceStem(index);
+    if (!blob) continue;
+    saveBlob(blob, `rs4-stem-${index + 1}.wav`);
+    count += 1;
+    await new Promise((resolve) => window.setTimeout(resolve, 400));
+  }
+  view.setStatus(count ? `Downloaded ${count} stem${count === 1 ? '' : 's'} through inserts, fades, level, and pan.` : 'No clips to export as stems.');
 }
 
 function saveBlob(blob: Blob, filename: string): void {

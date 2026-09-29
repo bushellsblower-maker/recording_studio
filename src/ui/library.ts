@@ -3,8 +3,8 @@ import type { SampleMeta } from '../audio/library';
 export interface LibraryHandlers {
   preview: (id: string) => void;
   load: (id: string) => void;
-  trigger: (id: string) => void;
-  noteOn: (midi: number) => void;
+  trigger: (id: string, velocity?: number) => void;
+  noteOn: (midi: number, velocity?: number) => void;
   noteOff: (midi: number) => void;
 }
 
@@ -119,7 +119,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   playTitle.textContent = 'Perform';
   const playHint = document.createElement('p');
   playHint.className = 'note';
-  playHint.textContent = 'Pads quantize to the beat while play or record is running. Drop a sound on a pad to assign it. A–K plays the keys.';
+  playHint.textContent = 'Drum rack: pads quantize to the beat while the transport is running. Higher on a pad or key is softer. Drop a sound on a pad to assign it. A–K plays the desk synth. Shift is a softer velocity.';
   playHead.append(playTitle);
   const pads = document.createElement('div');
   pads.className = 'pads';
@@ -169,9 +169,10 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     pad.type = 'button';
     pad.className = 'pad';
     pad.textContent = `Pad ${index + 1}`;
-    pad.addEventListener('click', () => {
+    pad.addEventListener('pointerdown', (event) => {
       const id = padIds[index];
-      if (id) handlers.trigger(id);
+      if (!id) return;
+      handlers.trigger(id, velocityAt(event, pad));
     });
     pad.addEventListener('dragover', (event) => {
       event.preventDefault();
@@ -218,7 +219,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     if (!midi) return;
     event.preventDefault();
     keyButtons.get(midi)?.classList.add('is-down');
-    handlers.noteOn(midi);
+    handlers.noteOn(midi, event.shiftKey ? 0.4 : 0.92);
   });
   window.addEventListener('keyup', (event) => {
     const midi = KEYBOARD[event.code];
@@ -232,7 +233,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
       event.preventDefault();
       key.setPointerCapture(event.pointerId);
       key.classList.add('is-down');
-      handlers.noteOn(midi);
+      handlers.noteOn(midi, velocityAt(event, key));
     });
     const release = (): void => {
       key.classList.remove('is-down');
@@ -507,6 +508,13 @@ function writeFavs(values: Set<string>): void {
   } catch {
     // Private mode can reject storage; favorites still work until reload.
   }
+}
+
+function velocityAt(event: PointerEvent, el: HTMLElement): number {
+  const rect = el.getBoundingClientRect();
+  if (rect.height < 2) return 0.85;
+  const along = (event.clientY - rect.top) / rect.height;
+  return Math.min(1, Math.max(0.15, along));
 }
 
 function isTyping(target: EventTarget | null): boolean {
