@@ -75,11 +75,13 @@ api.view = buildView({
   trackSolo: (index, solo) => api.engine?.setTrackSolo(index, solo),
   trackDb: (index, db) => api.engine?.setTrackDb(index, db),
   trackPan: (index, pan) => api.engine?.setTrackPan(index, pan),
-  trackImport: (index, file) => {
-    void file.arrayBuffer().then((data) => api.engine?.importEncoded(index, data, file.name));
+  trackKind: (index, kind) => api.engine?.setTrackKind(index, kind),
+  trackStart: (index, beat) => api.engine?.setTrackStartBeat(index, beat),
+  trackImport: (index, file, beat) => {
+    void file.arrayBuffer().then((data) => api.engine?.importEncoded(index, data, file.name, beat));
   },
-  trackDropSample: (index, sampleId) => {
-    void placeSample(sampleId, index);
+  trackDropSample: (index, sampleId, beat) => {
+    void placeSample(sampleId, index, beat);
   },
   downloadTrack: (index) => {
     const blob = api.engine?.trackWav(index);
@@ -105,12 +107,13 @@ api.view = buildView({
   loop: (on) => api.engine?.setLoop(on),
   loopStart: (bar) => api.engine?.setLoopStartBar(bar),
   loopBars: (bars) => api.engine?.setLoopBars(bars),
+  loopRegion: (startBar, bars) => api.engine?.setLoopRegion(startBar, bars),
   previewSample: (id) => {
     void withSample(id, (_meta, buffer) => api.engine?.previewBuffer(buffer));
   },
   loadSample: (id) => {
     const index = api.view?.targetTrack() ?? 0;
-    void placeSample(id, index);
+    void placeSample(id, index, 0);
   },
   triggerSample: (id) => {
     void withSample(id, (_meta, buffer) => api.engine?.triggerBuffer(buffer, api.view?.quantizeOn() ?? true));
@@ -125,7 +128,7 @@ const root = document.querySelector('#app');
 if (!root) throw new Error('Missing #app');
 root.replaceChildren(view.element);
 view.setStatus(
-  'Press Power, then preview the sample library or arm a track and record. Pads quantize while the transport runs. Raise MONITOR only to audition the live chain — it starts off so a mic cannot feed back.',
+  'Press Power, then use the Browser to preview a loop and drop it on the grid. Pads quantize while the transport runs. Tracks 1–4 print the channel; 5–8 print pads and keys. Raise MONITOR only to audition the live chain — it starts off so a mic cannot feed back.',
 );
 void bank
   .load()
@@ -146,6 +149,11 @@ function loop(): void {
     durations: engine.durations(),
     peaks: engine.peaks(),
     trackLevels: engine.trackMeters(),
+    bpm: engine.bpm(),
+    spans: engine.clipSpans(),
+    loopStartBeat: engine.loopStartBeat(),
+    loopBeats: engine.loopLengthBeats(),
+    looping: engine.isLooping(),
     recording: engine.modeName() === 'recording',
     playing: engine.modeName() === 'playing',
     suspended: engine.contextState() === 'suspended',
@@ -195,14 +203,14 @@ async function withSample(id: string, use: (meta: SampleMeta, buffer: AudioBuffe
   }
 }
 
-async function placeSample(id: string, index: number): Promise<void> {
+async function placeSample(id: string, index: number, startBeat = 0): Promise<void> {
   await withSample(id, (meta, buffer) => {
     const engine = api.engine;
     const view = api.view;
     if (!engine || !view) return;
     const tempo = meta.kind === 'loop' ? meta.bpm : null;
     if (tempo) view.setBpm(tempo);
-    engine.loadClip(index, buffer, { name: meta.name, bpm: tempo });
+    engine.loadClip(index, buffer, { name: meta.name, bpm: tempo, startBeat });
   });
 }
 
