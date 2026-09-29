@@ -5,6 +5,8 @@ import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, forma
 import type { EngineSnapshot, FolderId, InputMode, LaunchQuant, Levels, MicState, SynthSettings, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
+import type { KeyVoiceRequest } from '../audio/voices';
+import { attachDeskLayout } from './desk-layout';
 import { buildDevices } from './devices';
 import { buildLibrary } from './library';
 
@@ -75,7 +77,8 @@ export interface ConsoleHandlers {
   loopSelection: (startBeat: number, lengthBeats: number) => void;
   previewSample: (id: string) => void;
   loadSample: (id: string) => void;
-  triggerSample: (id: string) => void;
+  triggerSample: (id: string, velocity?: number) => void;
+  setKeyVoice: (voice: KeyVoiceRequest) => void;
   noteOn: (midi: number, velocity?: number) => void;
   noteOff: (midi: number) => void;
   redo: () => void;
@@ -559,6 +562,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     preview: handlers.previewSample,
     load: handlers.loadSample,
     trigger: handlers.triggerSample,
+    setKeyVoice: handlers.setKeyVoice,
     noteOn: handlers.noteOn,
     noteOff: handlers.noteOff,
   });
@@ -1057,21 +1061,38 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const playHead = library.play.querySelector('.library-head');
   if (playHead instanceof HTMLElement) attachCollapse(library.play, playHead, 'Pads and keys');
 
-  const deskStack = document.createElement('div');
-  deskStack.className = 'desk-stack';
-  deskStack.append(arrangeZone, devices.element, mixZone, playZone);
-  const desk = document.createElement('div');
-  desk.className = 'desk';
-  desk.append(browseZone, deskStack);
-
   const footer = document.createElement('details');
   footer.className = 'footer';
   const footerSummary = document.createElement('summary');
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the desk synth (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor.';
+    'Space plays or stops. R records. Z undoes, Shift+Z redoes. B taps tempo. L toggles the loop. M mutes the selected track. 1–8 selects a track. A–K plays the Perform voice (Shift is softer). Drag a clip to move it, drag its edges to trim, Alt-drag an edge for a fade. MARK drops a locator. COUNT is a one-bar count-in. PUNCH records inside the play range. SAVE and LOAD keep the project in this browser. BOUNCE renders inserts and sends; STEMS downloads each track. Headphones if you raise the monitor. On a wide screen, drag a section grip to reorder it and drag the bars between sections to resize them.';
   footer.append(footerSummary, footerCopy);
+
+  const desk = document.createElement('div');
+  desk.className = 'desk';
+  if (!(browseHead instanceof HTMLElement) || !(deviceHead instanceof HTMLElement) || !(playHead instanceof HTMLElement)) {
+    throw new Error('Desk sections are missing title bars.');
+  }
+  attachDeskLayout(
+    desk,
+    {
+      browse: browseZone,
+      arrange: arrangeZone,
+      devices: devices.element,
+      console: mixZone,
+      play: playZone,
+    },
+    {
+      browse: browseHead,
+      arrange: arrangeHead,
+      devices: deviceHead,
+      console: mixHead,
+      play: playHead,
+    },
+    footerSummary,
+  );
 
   const zoneNav = document.createElement('nav');
   zoneNav.className = 'zone-nav';

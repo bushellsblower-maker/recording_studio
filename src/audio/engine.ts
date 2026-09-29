@@ -202,6 +202,7 @@ export class StudioEngine {
   private voices: AudioBufferSourceNode[] = [];
   private previewNode: AudioBufferSourceNode | null = null;
   private held = new Map<number, HeldNote>();
+  private keyLayers: Array<{ buffer: AudioBuffer; rootMidi: number }> | null = null;
   private undoStack: History[] = [];
   private redoStack: History[] = [];
   private launches: PendingLaunch[] = [];
@@ -1409,9 +1410,19 @@ export class StudioEngine {
     }
   }
 
+  /** Null returns the keys to the desk synth. A list plays the nearest sample, pitched to the note. */
+  setKeyLayers(layers: Array<{ buffer: AudioBuffer; rootMidi: number }> | null): void {
+    for (const midi of [...this.held.keys()]) this.noteOff(midi);
+    this.keyLayers = layers && layers.length > 0 ? layers.map((layer) => ({ buffer: layer.buffer, rootMidi: layer.rootMidi })) : null;
+  }
+
   noteOn(midi: number, velocity = 0.9): void {
     if (!this.ensureOnline() || !this.ctx || !this.g) return;
     this.noteOff(midi);
+    if (this.keyLayers && this.keyLayers.length > 0) {
+      this.held.set(midi, this.startSampleNote(midi, velocity));
+      return;
+    }
     this.held.set(
       midi,
       startNote(this.ctx, this.g.performance, midi, this.ctx.currentTime, {
@@ -1431,6 +1442,55 @@ export class StudioEngine {
     if (!note) return;
     this.held.delete(midi);
     note.release(this.ctx?.currentTime ?? 0);
+  }
+
+  private startSampleNote(midi: number, velocity: number): HeldNote {
+    const ctx = this.ctx;
+    const graph = this.g;
+    const layers = this.keyLayers;
+    if (!ctx || !graph || !layers || layers.length === 0) return { release() {} };
+    let layer = layers[0]!;
+    let best = Math.abs(layer.rootMidi - midi);
+    for (const candidate of layers) {
+      const distance = Math.abs(candidate.rootMidi - midi);
+      if (distance < best || (distance === best && candidate.rootMidi < layer.rootMidi)) {
+        layer = candidate;
+        best = distance;
+      }
+    }
+    const rate = clamp(2 ** ((midi - layer.rootMidi) / 12), 0.125, 8);
+    const now = ctx.currentTime;
+    const source = ctx.createBufferSource();
+    source.buffer = layer.buffer;
+    source.playbackRate.setValueAtTime(rate, now);
+    const amp = ctx.createGain();
+    const peak = clamp(velocity, 0.05, 1);
+    amp.gain.setValueAtTime(peak, now);
+    source.connect(amp);
+    amp.connect(graph.performance);
+    source.start(now);
+    let stopped = false;
+    const handle: HeldNote = {
+      release(when: number) {
+        if (stopped) return;
+        stopped = true;
+        const at = Math.max(when, now);
+        const stopAt = at + 0.08;
+        amp.gain.cancelScheduledValues(at);
+        amp.gain.setValueAtTime(Math.max(0.0001, peak), at);
+        amp.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+        try {
+          source.stop(stopAt + 0.02);
+        } catch {
+          // The sample already ended.
+        }
+      },
+    };
+    source.onended = () => {
+      stopped = true;
+      if (this.held.get(midi) === handle) this.held.delete(midi);
+    };
+    return handle;
   }
 
   record(): void {
