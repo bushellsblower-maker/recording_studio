@@ -48,7 +48,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   const heading = document.createElement('div');
   heading.className = 'library-head';
   const title = document.createElement('h2');
-  title.textContent = 'Sample library';
+  title.textContent = 'Browser';
   const targetLabel = document.createElement('span');
   targetLabel.className = 'library-target';
   targetLabel.textContent = 'Load target: track 1';
@@ -93,7 +93,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   const note = document.createElement('p');
   note.className = 'note';
   note.textContent =
-    'Click a sample to preview it. Drag it onto a track or a pad. Pads quantize to the beat while the transport is running. A–K plays the keyboard.';
+    'Click a sample to preview it. Drag it onto the arrangement — the drop snaps to the beat. Pads quantize while the transport is running. A–K plays the keyboard.';
 
   element.append(heading, categories, grid, actions, pads, keysLabel, keys, note, credits);
   keys.append(piano);
