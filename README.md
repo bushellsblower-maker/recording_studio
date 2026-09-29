@@ -2,6 +2,8 @@
 
 A browser recording console. It uses the Web Audio API for a live microphone or a built-in tone generator, a real insert chain, four overdub tracks, and 16-bit WAV download.
 
+Live site: **https://recstudio.cybush.uk** (Cloudflare Worker `recording-studio`). The microphone works there because the custom domain is HTTPS.
+
 ## Run
 
 ```bash
@@ -72,3 +74,30 @@ What you record is the channel after the inserts, fader, and pan. Monitor level 
 - The master path includes a transparent safety limiter after the meters. It only catches overs.
 - If `AudioWorklet` fails to load, the gate is bypassed and recording falls back to `ScriptProcessorNode`.
 - This is a front-end app. Nothing is uploaded.
+
+## Deploy to recstudio.cybush.uk
+
+Publishing is **GitHub → Cloudflare**. A push to `main` runs `.github/workflows/deploy.yml`, which builds the Vite app and runs `wrangler deploy`. `npm run build` writes static files to `dist/`. `wrangler.toml` serves that directory as Worker assets, with SPA fallback to `index.html`, `workers_dev` enabled, and this route:
+
+```toml
+[[routes]]
+pattern = "recstudio.cybush.uk"
+custom_domain = true
+```
+
+Worker name: `recording-studio`. Account: `f027194dcc0be7e3812e673468bab58d` (zone `cybush.uk`). No secrets are committed.
+
+### GitHub Actions secrets
+
+Add these repository secrets on **bushellsblower-maker/recording_studio** (Settings → Secrets and variables → Actions). The same values already exist on other Cybush repos such as shuffle and cysuite, but secrets do not carry over to this repo.
+
+| Secret | Purpose |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | API token that can edit Workers scripts and attach custom domains on zone `cybush.uk` |
+| `CLOUDFLARE_ACCOUNT_ID` | `f027194dcc0be7e3812e673468bab58d` |
+
+Until both secrets exist, the publish job fails and tells you to add them. The build job on pull requests does not need them.
+
+After the secrets are set, merge to `main` (or re-run **Actions → Publish to Cloudflare**). The live URL is https://recstudio.cybush.uk.
+
+Local publish is not the path. `npm run deploy` builds `dist/` and runs `wrangler deploy` if you ever need it from a machine that already has those two environment variables.
