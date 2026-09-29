@@ -6,7 +6,7 @@ import { readMeter, readReduction } from './meters';
 import { Metronome } from './metronome';
 import { computePeaks } from './peaks';
 import { type HeldNote, startNote } from './synth';
-import { clampRange, dbToGain, formatTime, musicalPosition } from './units';
+import { clamp, clampRange, dbToGain, formatBeatPosition, formatTime, musicalPosition } from './units';
 import { concatFloat32, encodeStereoWav, sumStereo } from './wav';
 import { WORKLET_SOURCE } from './worklets';
 
@@ -194,8 +194,9 @@ export class StudioEngine {
   private inputSolo = false;
   private masterMute = false;
   private loopOn = false;
-  private loopStartBar = 1;
-  private loopBars = 2;
+  private playFromBeat = 0;
+  private playToBeat = 16;
+  private rangeCustom = false;
   private beatOrigin = 0;
   private loopStartSec = 0;
   private loopLengthSec = 0;
@@ -273,6 +274,9 @@ export class StudioEngine {
       masterMute: this.masterMute,
       metroOn: this.metroOn,
       loopOn: this.loopOn,
+      playFromBeat: this.playFromBeat,
+      playToBeat: this.playToBeat,
+      rangeCustom: this.rangeCustom,
       canUndo: this.undoState !== null,
     };
   }
@@ -297,7 +301,11 @@ export class StudioEngine {
     if (this.mode !== 'stopped' && this.ctx && this.rollStart > 0) {
       const elapsed = Math.max(0, this.ctx.currentTime - this.rollStart);
       const musical =
-        this.loopOn && this.loopLengthSec > 0 ? this.loopStartSec + (elapsed % this.loopLengthSec) : elapsed;
+        this.loopOn && this.loopLengthSec > 0
+          ? this.loopStartSec + (elapsed % this.loopLengthSec)
+          : this.usesRange()
+            ? this.loopStartSec + elapsed
+            : elapsed;
       const position = musicalPosition(musical, this.metroBpm);
       return { seconds: musical, label: 'POS', bar: position.bar, beat: position.beat };
     }
@@ -343,12 +351,62 @@ export class StudioEngine {
     else this.listener.onChange();
   }
 
-  setLoopRegion(startBar: number, bars: number): void {
-    this.loopOn = true;
-    this.loopStartBar = Math.min(64, Math.max(1, Math.round(startBar)));
-    this.loopBars = bars === 1 || bars === 2 || bars === 4 || bars === 8 ? bars : 2;
+  setPlayRange(fromBeat: number, toBeat: number, loop?: boolean): void {
+    if (this.mode === 'recording' || this.mode === 'stopping') {
+      this.status('Stop the transport before changing the play range.');
+      this.listener.onChange();
+      return;
+    }
+    const from = clamp(fromBeat, 0, 256);
+    const to = clamp(Math.max(from + 0.25, toBeat), 0, 256);
+    this.playFromBeat = from;
+    this.playToBeat = to;
+    this.rangeCustom = true;
+    if (loop !== undefined) this.loopOn = loop;
     if (this.mode === 'playing') this.play();
-    else this.listener.onChange();
+    else {
+      this.status(this.loopOn ? `Looping ${this.rangePhrase()}.` : `Play range set, ${this.rangePhrase()}.`);
+      this.listener.onChange();
+    }
+  }
+
+  clearPlayRange(): void {
+    if (this.mode === 'recording' || this.mode === 'stopping') {
+      this.status('Stop the transport before changing the play range.');
+      this.listener.onChange();
+      return;
+    }
+    this.rangeCustom = false;
+    this.loopOn = false;
+    this.playFromBeat = 0;
+    this.playToBeat = 16;
+    if (this.mode === 'playing') this.play();
+    else {
+      this.status('Playback uses the whole arrangement.');
+      this.listener.onChange();
+    }
+  }
+
+  loopSelection(startBeat: number, lengthBeats: number): void {
+    if (this.mode === 'recording' || this.mode === 'stopping') {
+      this.status('Stop the transport before changing the play range.');
+      this.listener.onChange();
+      return;
+    }
+    if (lengthBeats < 0.05) {
+      this.status('Highlight a track that has a clip, then loop that selection.');
+      this.listener.onChange();
+      return;
+    }
+    this.playFromBeat = clamp(startBeat, 0, 256);
+    this.playToBeat = clamp(this.playFromBeat + lengthBeats, this.playFromBeat + 0.25, 256);
+    this.rangeCustom = true;
+    this.loopOn = true;
+    if (this.mode === 'playing') this.play();
+    else {
+      this.status(`Looping the selection, ${this.rangePhrase()}.`);
+      this.listener.onChange();
+    }
   }
 
   sessionLength(): number {
@@ -366,15 +424,19 @@ export class StudioEngine {
   }
 
   loopStartBeat(): number {
-    return this.loopOn ? (this.loopStartBar - 1) * 4 : 0;
+    return this.playFromBeat;
   }
 
   loopLengthBeats(): number {
-    return this.loopOn ? this.loopBars * 4 : 0;
+    return Math.max(0.25, this.playToBeat - this.playFromBeat);
   }
 
   isLooping(): boolean {
     return this.loopOn;
+  }
+
+  rangeIsCustom(): boolean {
+    return this.rangeCustom;
   }
 
   clipSpans(): { startBeat: number; lengthBeats: number }[] {
@@ -404,7 +466,7 @@ export class StudioEngine {
   poll(): void {
     if (!this.ctx) return;
     if (this.mode === 'recording') {
-      if (this.loopOn && this.loopLengthSec > 0 && this.ctx.currentTime >= this.rollStart + this.loopLengthSec) {
+      if (this.usesRange() && this.loopLengthSec > 0 && this.ctx.currentTime >= this.rollStart + this.loopLengthSec) {
         this.stop();
       }
       return;
@@ -786,19 +848,17 @@ export class StudioEngine {
   }
 
   setLoop(on: boolean): void {
+    if ((this.mode === 'recording' || this.mode === 'stopping') && on !== this.loopOn) {
+      this.status('Stop the transport before changing the loop.');
+      this.listener.onChange();
+      return;
+    }
     this.loopOn = on;
     if (this.mode === 'playing') this.play();
-    else this.listener.onChange();
-  }
-
-  setLoopStartBar(bar: number): void {
-    this.loopStartBar = Math.min(64, Math.max(1, Math.round(bar)));
-    if (this.mode === 'playing' && this.loopOn) this.play();
-  }
-
-  setLoopBars(bars: number): void {
-    this.loopBars = bars === 1 || bars === 2 || bars === 4 || bars === 8 ? bars : 2;
-    if (this.mode === 'playing' && this.loopOn) this.play();
+    else {
+      this.status(on ? `Looping the region, ${this.rangePhrase()}.` : 'Loop off. Playback still follows the play range when one is set.');
+      this.listener.onChange();
+    }
   }
 
   undo(): void {
@@ -943,7 +1003,7 @@ export class StudioEngine {
     }
     this.stash();
     this.prepareLoopWindow();
-    const origin = this.loopOn ? (this.loopStartBar - 1) * 4 : 0;
+    const origin = this.usesRange() ? this.playFromBeat : 0;
     for (const track of this.tracks) {
       if (!track.armed) continue;
       track.pending = true;
@@ -979,7 +1039,7 @@ export class StudioEngine {
     let message = playing
       ? `Recording ${armed.length} armed ${noun} over ${playing} playing back.`
       : `Recording ${armed.length} armed ${noun}.`;
-    if (this.loopOn) message += ` The take stops after ${this.loopBars} bar${this.loopBars === 1 ? '' : 's'}.`;
+    if (this.usesRange()) message += ` The take runs ${this.rangePhrase()} and then stops.`;
     if (instrumentArmed) message += ' Instrument tracks print pads and keys.';
     if (audioArmed && !this.inputLooksActive()) {
       message += ' Input looks silent — enable the mic or raise the tone level.';
@@ -1001,7 +1061,7 @@ export class StudioEngine {
     }
     this.prepareLoopWindow();
     const hasAudio = this.sessionLength() > 0;
-    if (this.loopOn) this.playDuration = this.loopLengthSec;
+    if (this.usesRange()) this.playDuration = this.loopLengthSec;
     else this.playDuration = hasAudio ? this.sessionLength() : Number.POSITIVE_INFINITY;
     if (this.mode === 'playing') {
       this.metro?.stop();
@@ -1016,7 +1076,8 @@ export class StudioEngine {
       this.metro.start(startAt);
     }
     if (!hasAudio) this.status('Clock running. Pads quantize to the beat while play is active.');
-    else if (this.loopOn) this.status(`Looping ${this.loopBars} bar${this.loopBars === 1 ? '' : 's'} from bar ${this.loopStartBar}.`);
+    else if (this.loopOn) this.status(`Looping ${this.rangePhrase()}.`);
+    else if (this.rangeCustom) this.status(`Playing ${this.rangePhrase()}.`);
     else this.status('Playing.');
     this.listener.onChange();
   }
@@ -1695,14 +1756,15 @@ export class StudioEngine {
   private startPlayback(when: number, skipArmed: boolean): void {
     this.stopSources();
     this.rollStart = when;
-    this.beatOrigin = when - this.loopStartSec;
+    const regionStart = this.usesRange() ? this.loopStartSec : 0;
+    this.beatOrigin = when - regionStart;
     this.scheduledPass = 1;
-    this.spawnPass(when, this.loopOn ? this.loopStartSec : 0, skipArmed);
+    this.spawnPass(when, regionStart, skipArmed);
   }
 
   private spawnPass(passWhen: number, regionStart: number, skipArmed: boolean): void {
     if (!this.ctx) return;
-    const regionEnd = this.loopOn ? regionStart + this.loopLengthSec : Number.POSITIVE_INFINITY;
+    const regionEnd = this.usesRange() && this.loopLengthSec > 0 ? regionStart + this.loopLengthSec : Number.POSITIVE_INFINITY;
     for (const track of this.tracks) {
       const buffer = track.buffer;
       if (!buffer || !track.input) continue;
@@ -1771,15 +1833,25 @@ export class StudioEngine {
     this.sources = [];
   }
 
+  private usesRange(): boolean {
+    return this.loopOn || this.rangeCustom;
+  }
+
+  private rangePhrase(): string {
+    return `${formatBeatPosition(this.playFromBeat)} to ${formatBeatPosition(this.playToBeat)}`;
+  }
+
   private prepareLoopWindow(): void {
-    if (!this.loopOn) {
+    if (!this.usesRange()) {
       this.loopStartSec = 0;
       this.loopLengthSec = 0;
       return;
     }
-    const secondsPerBar = (60 / Math.max(1, this.metroBpm)) * 4;
-    this.loopStartSec = (this.loopStartBar - 1) * secondsPerBar;
-    this.loopLengthSec = this.loopBars * secondsPerBar;
+    const from = Math.max(0, this.playFromBeat);
+    const to = Math.max(from + 0.25, this.playToBeat);
+    const secondsPerBeat = this.secondsPerBeat();
+    this.loopStartSec = from * secondsPerBeat;
+    this.loopLengthSec = (to - from) * secondsPerBeat;
   }
 
   private nextBeatTime(now: number): number {

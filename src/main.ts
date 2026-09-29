@@ -105,9 +105,9 @@ api.view = buildView({
   },
   undo: () => api.engine?.undo(),
   loop: (on) => api.engine?.setLoop(on),
-  loopStart: (bar) => api.engine?.setLoopStartBar(bar),
-  loopBars: (bars) => api.engine?.setLoopBars(bars),
-  loopRegion: (startBar, bars) => api.engine?.setLoopRegion(startBar, bars),
+  playRange: (fromBeat, toBeat, loop) => api.engine?.setPlayRange(fromBeat, toBeat, loop),
+  clearRange: () => api.engine?.clearPlayRange(),
+  loopSelection: (startBeat, lengthBeats) => api.engine?.loopSelection(startBeat, lengthBeats),
   previewSample: (id) => {
     void withSample(id, (_meta, buffer) => api.engine?.previewBuffer(buffer));
   },
@@ -154,6 +154,7 @@ function loop(): void {
     loopStartBeat: engine.loopStartBeat(),
     loopBeats: engine.loopLengthBeats(),
     looping: engine.isLooping(),
+    rangeCustom: engine.rangeIsCustom(),
     recording: engine.modeName() === 'recording',
     playing: engine.modeName() === 'playing',
     suspended: engine.contextState() === 'suspended',

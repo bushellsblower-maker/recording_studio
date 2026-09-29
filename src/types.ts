@@ -35,6 +35,9 @@ export interface EngineSnapshot {
   masterMute: boolean;
   metroOn: boolean;
   loopOn: boolean;
+  playFromBeat: number;
+  playToBeat: number;
+  rangeCustom: boolean;
   canUndo: boolean;
 }
 
