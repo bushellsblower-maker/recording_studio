@@ -1506,15 +1506,28 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
 }
 
 @media (min-width: 900px) {
+  html {
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+
+  body {
+    height: auto;
+    overflow: visible;
+  }
+
   .app {
     height: auto;
     max-height: none;
     min-height: 100dvh;
     overflow: visible;
+    grid-template-rows: auto auto auto auto auto auto;
   }
 
   .desk,
   .desk-col {
+    height: auto;
+    max-height: none;
     overflow: visible;
   }
 
@@ -1791,6 +1804,83 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
     width: 100%;
     min-height: 24px;
     max-height: none;
+  }
+
+  /* Measure each section's full height with stretching turned off, so the stack can exceed the window. */
+  .desk.is-desktop-layout .is-natural {
+    container-type: normal;
+    height: auto;
+    overflow: visible;
+  }
+
+  .desk.is-desktop-layout .is-natural .deck,
+  .desk.is-desktop-layout .is-natural .tracks,
+  .desk.is-desktop-layout .is-natural .console,
+  .desk.is-desktop-layout .is-natural .device-grid,
+  .desk.is-desktop-layout .is-natural .library,
+  .desk.is-desktop-layout .is-natural .perform {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .desk.is-desktop-layout .is-natural .track:not(.ruler-row) {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .desk.is-desktop-layout .is-natural .wave:not(.ruler) {
+    height: 42px;
+  }
+
+  .desk.is-desktop-layout .is-natural .zone-session .btn {
+    height: auto;
+    min-height: 22px;
+  }
+
+  .desk.is-desktop-layout .is-natural .fader-track,
+  .desk.is-desktop-layout .is-natural .meter {
+    flex: 0 0 120px;
+    height: 120px;
+  }
+
+  .desk.is-desktop-layout .is-natural .panel,
+  .desk.is-desktop-layout .is-natural .device-card {
+    height: auto;
+    overflow: visible;
+  }
+
+  .desk.is-desktop-layout .is-natural .device-grid {
+    grid-auto-rows: auto;
+  }
+
+  .desk.is-desktop-layout .is-natural .eq-curve,
+  .desk.is-desktop-layout .is-natural .auto-lane {
+    flex: 0 0 72px;
+    height: 72px;
+    min-height: 0;
+  }
+
+  .desk.is-desktop-layout .is-natural .sample-grid {
+    flex: 0 0 420px;
+    height: 420px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .desk.is-desktop-layout .is-natural .perform .pad {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 48px;
+  }
+
+  .desk.is-desktop-layout .is-natural .piano {
+    flex: 0 0 92px;
+    height: 92px;
+    min-height: 0;
   }
 }
 
