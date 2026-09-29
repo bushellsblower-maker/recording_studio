@@ -1,7 +1,7 @@
 import type { SampleMeta } from '../audio/library';
 import type { PluginKind } from '../audio/plugins';
 import { DEFAULTS, RANGES } from '../defaults';
-import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
+import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, formatLength, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
 import type { EngineSnapshot, FolderId, InputMode, LaunchQuant, Levels, MicState, SynthSettings, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
@@ -1529,7 +1529,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
         startBeat: (dragBeats.get(clip.id) ?? clip.startBeat) - origin,
       }));
       track.canvas.title = source.length
-        ? source.map((clip) => `${clip.name} (${formatTime(clip.duration)})`).join(', ')
+        ? source.map((clip) => `${clip.name} (${formatLength(clip.duration)})`).join(', ')
         : 'Empty lane. Drop a sound here. Another drop on this lane adds another clip.';
       track.canvas.classList.toggle('is-clip', drawn.some((clip) => clip.lengthBeats > 0));
       const fades = last?.tracks[index];
@@ -1914,9 +1914,6 @@ function drawLane(
       ctx.fill();
     }
   }
-  ctx.font = `${Math.max(9, Math.floor(size.height * 0.28))}px ui-monospace, monospace`;
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = '#f4f7fb';
   for (const clip of clips) {
     if (clip.lengthBeats <= 0) continue;
     const x0 = (clip.startBeat / viewBeats) * size.width;
@@ -1931,17 +1928,7 @@ function drawLane(
         ctx.fillRect(x0, 2, clipWidth, size.height - 4);
       }
     }
-    const full = `${clip.name} ${formatTime(clip.duration)}`;
-    const timeOnly = formatTime(clip.duration);
-    const nextX = clips
-      .filter((item) => item !== clip && item.startBeat > clip.startBeat && item.lengthBeats > 0)
-      .reduce((soonest, item) => Math.min(soonest, (item.startBeat / viewBeats) * size.width), size.width);
-    const gap = nextX - (x0 + clipWidth) - 6;
-    const label = ctx.measureText(full).width + 8 <= Math.max(clipWidth, gap) ? full : timeOnly;
-    const textW = ctx.measureText(label).width;
-    const inset = clip.id === selectedId && clipWidth >= 10 ? Math.min(7, clipWidth * 0.18) + 3 : 4;
-    if (clipWidth >= textW + inset + 4) ctx.fillText(label, x0 + inset, 3);
-    else if (textW <= gap) ctx.fillText(label, x0 + clipWidth + 4, 3);
+    paintClipLength(ctx, size.width, x0, clipWidth, formatLength(clip.duration));
   }
   if (volume.length > 1) {
     ctx.strokeStyle = 'rgba(240, 162, 2, 0.9)';
@@ -1955,6 +1942,30 @@ function drawLane(
     ctx.stroke();
   }
   paintPlayhead(ctx, size.width, size.height, playhead, viewBeats);
+}
+
+function paintClipLength(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  x0: number,
+  clipWidth: number,
+  label: string,
+): void {
+  ctx.save();
+  ctx.font = '12px ui-monospace, monospace';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const textW = ctx.measureText(label).width;
+  const boxW = Math.ceil(textW + 8);
+  const boxH = 16;
+  let boxX = clipWidth >= boxW + 4 ? x0 + 2 : x0 + clipWidth + 2;
+  boxX = Math.max(1, Math.min(boxX, width - boxW - 1));
+  const boxY = 2;
+  ctx.fillStyle = 'rgba(8, 10, 14, 0.92)';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.fillStyle = '#f4f7fb';
+  ctx.fillText(label, boxX + 4, boxY + boxH / 2);
+  ctx.restore();
 }
 
 function paintPlayhead(

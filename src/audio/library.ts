@@ -6,6 +6,8 @@ export interface SampleMeta {
   file: string;
   bpm: number | null;
   bars: number | null;
+  /** Wall-clock length of the file, in seconds. */
+  seconds?: number;
   /** virtuosity = recorded CC0 excerpt or a loop made from those hits. original = synthesis for this repo. */
   credit?: 'virtuosity' | 'original' | string;
 }

@@ -11,7 +11,8 @@
       "file": "drums/crash-sizzle-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "crash-sizzle-med",
@@ -21,7 +22,8 @@
       "file": "drums/crash-sizzle-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "crash-sizzle-soft",
@@ -31,7 +33,8 @@
       "file": "drums/crash-sizzle-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "crash-hard",
@@ -41,7 +44,8 @@
       "file": "drums/crash-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "crash-med",
@@ -51,7 +55,8 @@
       "file": "drums/crash-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "crash-soft",
@@ -61,7 +66,8 @@
       "file": "drums/crash-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.084
     },
     {
       "id": "stick",
@@ -71,7 +77,8 @@
       "file": "drums/stick.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.104
     },
     {
       "id": "snare-stick-hard",
@@ -81,7 +88,8 @@
       "file": "drums/snare-stick-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.097
     },
     {
       "id": "snare-stick-hot",
@@ -91,7 +99,8 @@
       "file": "drums/snare-stick-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.092
     },
     {
       "id": "snare-stick-soft",
@@ -101,7 +110,8 @@
       "file": "drums/snare-stick-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.124
     },
     {
       "id": "electro-hat-1",
@@ -111,7 +121,8 @@
       "file": "drums/electro-hat-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.08
     },
     {
       "id": "electro-hat-2",
@@ -121,7 +132,8 @@
       "file": "drums/electro-hat-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.1
     },
     {
       "id": "electro-hat-3",
@@ -131,7 +143,8 @@
       "file": "drums/electro-hat-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.12
     },
     {
       "id": "electro-hat-4",
@@ -141,7 +154,8 @@
       "file": "drums/electro-hat-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.14
     },
     {
       "id": "electro-kick-1",
@@ -151,7 +165,8 @@
       "file": "drums/electro-kick-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "electro-kick-2",
@@ -161,7 +176,8 @@
       "file": "drums/electro-kick-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.38
     },
     {
       "id": "electro-kick-3",
@@ -171,7 +187,8 @@
       "file": "drums/electro-kick-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.4
     },
     {
       "id": "electro-kick-4",
@@ -181,7 +198,8 @@
       "file": "drums/electro-kick-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "electro-open-1",
@@ -191,7 +209,8 @@
       "file": "drums/electro-open-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "electro-open-2",
@@ -201,7 +220,8 @@
       "file": "drums/electro-open-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "electro-open-3",
@@ -211,7 +231,8 @@
       "file": "drums/electro-open-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "electro-open-4",
@@ -221,7 +242,8 @@
       "file": "drums/electro-open-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "electro-snare-1",
@@ -231,7 +253,8 @@
       "file": "drums/electro-snare-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.3
     },
     {
       "id": "electro-snare-2",
@@ -241,7 +264,8 @@
       "file": "drums/electro-snare-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.3
     },
     {
       "id": "electro-snare-3",
@@ -251,7 +275,8 @@
       "file": "drums/electro-snare-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.3
     },
     {
       "id": "electro-snare-4",
@@ -261,7 +286,8 @@
       "file": "drums/electro-snare-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.3
     },
     {
       "id": "flat-crash-hard",
@@ -271,7 +297,8 @@
       "file": "drums/flat-crash-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.034
     },
     {
       "id": "flat-crash-med",
@@ -281,7 +308,8 @@
       "file": "drums/flat-crash-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.034
     },
     {
       "id": "flat-crash-soft",
@@ -291,7 +319,8 @@
       "file": "drums/flat-crash-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 1.034
     },
     {
       "id": "flat-ride-hard",
@@ -301,7 +330,8 @@
       "file": "drums/flat-ride-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "flat-ride-med",
@@ -311,7 +341,8 @@
       "file": "drums/flat-ride-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "flat-ride-soft",
@@ -321,7 +352,8 @@
       "file": "drums/flat-ride-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "hat",
@@ -331,7 +363,8 @@
       "file": "drums/hat.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.194
     },
     {
       "id": "hat-closed-hard",
@@ -341,7 +374,8 @@
       "file": "drums/hat-closed-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.194
     },
     {
       "id": "hat-closed-soft",
@@ -351,7 +385,8 @@
       "file": "drums/hat-closed-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.194
     },
     {
       "id": "hat-open",
@@ -361,7 +396,8 @@
       "file": "drums/hat-open.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.709
     },
     {
       "id": "hat-half-hard",
@@ -371,7 +407,8 @@
       "file": "drums/hat-half-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "hat-half-soft",
@@ -381,7 +418,8 @@
       "file": "drums/hat-half-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.709
     },
     {
       "id": "hat-open-full-hard",
@@ -391,7 +429,8 @@
       "file": "drums/hat-open-full-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.934
     },
     {
       "id": "hat-open-full-med",
@@ -401,7 +440,8 @@
       "file": "drums/hat-open-full-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.934
     },
     {
       "id": "hat-open-full-soft",
@@ -411,7 +451,8 @@
       "file": "drums/hat-open-full-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.934
     },
     {
       "id": "hat-pedal-hard",
@@ -421,7 +462,8 @@
       "file": "drums/hat-pedal-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.215
     },
     {
       "id": "hat-pedal-med",
@@ -431,7 +473,8 @@
       "file": "drums/hat-pedal-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.241
     },
     {
       "id": "hat-pedal-soft",
@@ -441,7 +484,8 @@
       "file": "drums/hat-pedal-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.246
     },
     {
       "id": "hat-34-hard",
@@ -451,7 +495,8 @@
       "file": "drums/hat-34-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "hat-34-med",
@@ -461,7 +506,8 @@
       "file": "drums/hat-34-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "hat-34-soft",
@@ -471,7 +517,8 @@
       "file": "drums/hat-34-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "kick",
@@ -481,7 +528,8 @@
       "file": "drums/kick.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.513
     },
     {
       "id": "kick-snoff-hard",
@@ -491,7 +539,8 @@
       "file": "drums/kick-snoff-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.385
     },
     {
       "id": "kick-snoff-med",
@@ -501,7 +550,8 @@
       "file": "drums/kick-snoff-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.51
     },
     {
       "id": "kick-snoff-soft",
@@ -511,7 +561,8 @@
       "file": "drums/kick-snoff-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.514
     },
     {
       "id": "kick-snon-hard",
@@ -521,7 +572,8 @@
       "file": "drums/kick-snon-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.399
     },
     {
       "id": "kick-snon-soft",
@@ -531,7 +583,8 @@
       "file": "drums/kick-snon-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.514
     },
     {
       "id": "ride",
@@ -541,7 +594,8 @@
       "file": "drums/ride.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bell-lofi-hard",
@@ -551,7 +605,8 @@
       "file": "drums/ride-bell-lofi-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bell-lofi-med",
@@ -561,7 +616,8 @@
       "file": "drums/ride-bell-lofi-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bell-lofi-soft",
@@ -571,7 +627,8 @@
       "file": "drums/ride-bell-lofi-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bell-hard",
@@ -581,7 +638,8 @@
       "file": "drums/ride-bell-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bell-soft",
@@ -591,7 +649,8 @@
       "file": "drums/ride-bell-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.584
     },
     {
       "id": "ride-bow-hard",
@@ -601,7 +660,8 @@
       "file": "drums/ride-bow-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "ride-bow-med",
@@ -611,7 +671,8 @@
       "file": "drums/ride-bow-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "ride-bow-soft",
@@ -621,7 +682,8 @@
       "file": "drums/ride-bow-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.734
     },
     {
       "id": "rim",
@@ -631,7 +693,8 @@
       "file": "drums/rim.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.431
     },
     {
       "id": "snare-rim-hard",
@@ -641,7 +704,8 @@
       "file": "drums/snare-rim-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.415
     },
     {
       "id": "snare-rim-hot",
@@ -651,7 +715,8 @@
       "file": "drums/snare-rim-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.23
     },
     {
       "id": "snare-rim-soft",
@@ -661,7 +726,8 @@
       "file": "drums/snare-rim-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.426
     },
     {
       "id": "snare",
@@ -671,7 +737,8 @@
       "file": "drums/snare.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.132
     },
     {
       "id": "snare-buzz-hard",
@@ -681,7 +748,8 @@
       "file": "drums/snare-buzz-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.581
     },
     {
       "id": "snare-buzz-hot",
@@ -691,7 +759,8 @@
       "file": "drums/snare-buzz-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.55
     },
     {
       "id": "snare-buzz-med",
@@ -701,7 +770,8 @@
       "file": "drums/snare-buzz-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.476
     },
     {
       "id": "snare-buzz-soft",
@@ -711,7 +781,8 @@
       "file": "drums/snare-buzz-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.505
     },
     {
       "id": "snare-edge-hard",
@@ -721,7 +792,8 @@
       "file": "drums/snare-edge-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.391
     },
     {
       "id": "snare-edge-hot",
@@ -731,7 +803,8 @@
       "file": "drums/snare-edge-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.28
     },
     {
       "id": "snare-edge-med",
@@ -741,7 +814,8 @@
       "file": "drums/snare-edge-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.264
     },
     {
       "id": "snare-edge-soft",
@@ -751,7 +825,8 @@
       "file": "drums/snare-edge-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.173
     },
     {
       "id": "snare-flam-hard",
@@ -761,7 +836,8 @@
       "file": "drums/snare-flam-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.159
     },
     {
       "id": "snare-flam-hot",
@@ -771,7 +847,8 @@
       "file": "drums/snare-flam-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.159
     },
     {
       "id": "snare-flam-med",
@@ -781,7 +858,8 @@
       "file": "drums/snare-flam-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.177
     },
     {
       "id": "snare-flam-soft",
@@ -791,7 +869,8 @@
       "file": "drums/snare-flam-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.127
     },
     {
       "id": "snare-ghost-hard",
@@ -801,7 +880,8 @@
       "file": "drums/snare-ghost-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.095
     },
     {
       "id": "snare-ghost-hot",
@@ -811,7 +891,8 @@
       "file": "drums/snare-ghost-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.099
     },
     {
       "id": "snare-ghost-med",
@@ -821,7 +902,8 @@
       "file": "drums/snare-ghost-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.086
     },
     {
       "id": "snare-ghost-soft",
@@ -831,7 +913,8 @@
       "file": "drums/snare-ghost-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.088
     },
     {
       "id": "snare-half-hard",
@@ -841,7 +924,8 @@
       "file": "drums/snare-half-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.149
     },
     {
       "id": "snare-half-hot",
@@ -851,7 +935,8 @@
       "file": "drums/snare-half-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.161
     },
     {
       "id": "snare-half-med",
@@ -861,7 +946,8 @@
       "file": "drums/snare-half-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.188
     },
     {
       "id": "snare-half-soft",
@@ -871,7 +957,8 @@
       "file": "drums/snare-half-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.157
     },
     {
       "id": "snare-center-hard",
@@ -881,7 +968,8 @@
       "file": "drums/snare-center-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.159
     },
     {
       "id": "snare-center-hot",
@@ -891,7 +979,8 @@
       "file": "drums/snare-center-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.135
     },
     {
       "id": "snare-center-soft",
@@ -901,7 +990,8 @@
       "file": "drums/snare-center-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.135
     },
     {
       "id": "stickshot-b-hard",
@@ -911,7 +1001,8 @@
       "file": "drums/stickshot-b-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.097
     },
     {
       "id": "stickshot-b-hot",
@@ -921,7 +1012,8 @@
       "file": "drums/stickshot-b-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.095
     },
     {
       "id": "stickshot-b-med",
@@ -931,7 +1023,8 @@
       "file": "drums/stickshot-b-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.093
     },
     {
       "id": "stickshot-b-soft",
@@ -941,7 +1034,8 @@
       "file": "drums/stickshot-b-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.13
     },
     {
       "id": "stickshot-hard",
@@ -951,7 +1045,8 @@
       "file": "drums/stickshot-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.137
     },
     {
       "id": "stickshot-hot",
@@ -961,7 +1056,8 @@
       "file": "drums/stickshot-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.144
     },
     {
       "id": "stickshot-med",
@@ -971,7 +1067,8 @@
       "file": "drums/stickshot-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.15
     },
     {
       "id": "stickshot-soft",
@@ -981,7 +1078,8 @@
       "file": "drums/stickshot-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.15
     },
     {
       "id": "tom-hi",
@@ -991,7 +1089,8 @@
       "file": "drums/tom-hi.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.589
     },
     {
       "id": "tom-hi-edge-hard",
@@ -1001,7 +1100,8 @@
       "file": "drums/tom-hi-edge-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.654
     },
     {
       "id": "tom-hi-edge-hot",
@@ -1011,7 +1111,8 @@
       "file": "drums/tom-hi-edge-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.653
     },
     {
       "id": "tom-hi-edge-med",
@@ -1021,7 +1122,8 @@
       "file": "drums/tom-hi-edge-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.654
     },
     {
       "id": "tom-hi-edge-soft",
@@ -1031,7 +1133,8 @@
       "file": "drums/tom-hi-edge-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.652
     },
     {
       "id": "tom-hi-mid-hard",
@@ -1041,7 +1144,8 @@
       "file": "drums/tom-hi-mid-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.474
     },
     {
       "id": "tom-hi-mid-hot",
@@ -1051,7 +1155,8 @@
       "file": "drums/tom-hi-mid-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.405
     },
     {
       "id": "tom-hi-mid-med",
@@ -1061,7 +1166,8 @@
       "file": "drums/tom-hi-mid-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.55
     },
     {
       "id": "tom-hi-mid-soft",
@@ -1071,7 +1177,8 @@
       "file": "drums/tom-hi-mid-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.654
     },
     {
       "id": "tom-hi-hard",
@@ -1081,7 +1188,8 @@
       "file": "drums/tom-hi-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.565
     },
     {
       "id": "tom-hi-hot",
@@ -1091,7 +1199,8 @@
       "file": "drums/tom-hi-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.434
     },
     {
       "id": "tom-hi-soft",
@@ -1101,7 +1210,8 @@
       "file": "drums/tom-hi-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.65
     },
     {
       "id": "tom-lo",
@@ -1111,7 +1221,8 @@
       "file": "drums/tom-lo.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-edge-hard",
@@ -1121,7 +1232,8 @@
       "file": "drums/tom-lo-edge-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-edge-hot",
@@ -1131,7 +1243,8 @@
       "file": "drums/tom-lo-edge-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-edge-med",
@@ -1141,7 +1254,8 @@
       "file": "drums/tom-lo-edge-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-edge-soft",
@@ -1151,7 +1265,8 @@
       "file": "drums/tom-lo-edge-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-mute-hard",
@@ -1161,7 +1276,8 @@
       "file": "drums/tom-lo-mute-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.392
     },
     {
       "id": "tom-lo-mute-hot",
@@ -1171,7 +1287,8 @@
       "file": "drums/tom-lo-mute-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.392
     },
     {
       "id": "tom-lo-mute-med",
@@ -1181,7 +1298,8 @@
       "file": "drums/tom-lo-mute-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.422
     },
     {
       "id": "tom-lo-mute-soft",
@@ -1191,7 +1309,8 @@
       "file": "drums/tom-lo-mute-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.434
     },
     {
       "id": "tom-lo-rim-hard",
@@ -1201,7 +1320,8 @@
       "file": "drums/tom-lo-rim-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.484
     },
     {
       "id": "tom-lo-rim-hot",
@@ -1211,7 +1331,8 @@
       "file": "drums/tom-lo-rim-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.484
     },
     {
       "id": "tom-lo-rim-med",
@@ -1221,7 +1342,8 @@
       "file": "drums/tom-lo-rim-med.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.484
     },
     {
       "id": "tom-lo-rim-soft",
@@ -1231,7 +1353,8 @@
       "file": "drums/tom-lo-rim-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.479
     },
     {
       "id": "tom-lo-hard",
@@ -1241,7 +1364,8 @@
       "file": "drums/tom-lo-hard.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "tom-lo-hot",
@@ -1251,7 +1375,8 @@
       "file": "drums/tom-lo-hot.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.782
     },
     {
       "id": "tom-lo-soft",
@@ -1261,7 +1386,8 @@
       "file": "drums/tom-lo-soft.wav",
       "bpm": null,
       "bars": null,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 0.784
     },
     {
       "id": "agogo-hi-1",
@@ -1271,7 +1397,8 @@
       "file": "perc/agogo-hi-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "agogo-hi-2",
@@ -1281,7 +1408,8 @@
       "file": "perc/agogo-hi-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "agogo-hi-3",
@@ -1291,7 +1419,8 @@
       "file": "perc/agogo-hi-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.4
     },
     {
       "id": "agogo-lo-1",
@@ -1301,7 +1430,8 @@
       "file": "perc/agogo-lo-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "agogo-lo-2",
@@ -1311,7 +1441,8 @@
       "file": "perc/agogo-lo-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "agogo-lo-3",
@@ -1321,7 +1452,8 @@
       "file": "perc/agogo-lo-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.4
     },
     {
       "id": "bongo-1",
@@ -1331,7 +1463,8 @@
       "file": "perc/bongo-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "bongo-2",
@@ -1341,7 +1474,8 @@
       "file": "perc/bongo-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "bongo-3",
@@ -1351,7 +1485,8 @@
       "file": "perc/bongo-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "cabasa-1",
@@ -1361,7 +1496,8 @@
       "file": "perc/cabasa-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.16
     },
     {
       "id": "cabasa-2",
@@ -1371,7 +1507,8 @@
       "file": "perc/cabasa-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "cabasa-3",
@@ -1381,7 +1518,8 @@
       "file": "perc/cabasa-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.2
     },
     {
       "id": "clap-1",
@@ -1391,7 +1529,8 @@
       "file": "perc/clap-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.28
     },
     {
       "id": "clap-2",
@@ -1401,7 +1540,8 @@
       "file": "perc/clap-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.28
     },
     {
       "id": "clap-3",
@@ -1411,7 +1551,8 @@
       "file": "perc/clap-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.28
     },
     {
       "id": "clave-1",
@@ -1421,7 +1562,8 @@
       "file": "perc/clave-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "clave-2",
@@ -1431,7 +1573,8 @@
       "file": "perc/clave-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "clave-3",
@@ -1441,7 +1584,8 @@
       "file": "perc/clave-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "conga-1",
@@ -1451,7 +1595,8 @@
       "file": "perc/conga-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "conga-2",
@@ -1461,7 +1606,8 @@
       "file": "perc/conga-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "conga-3",
@@ -1471,7 +1617,8 @@
       "file": "perc/conga-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "conga-slap-1",
@@ -1481,7 +1628,8 @@
       "file": "perc/conga-slap-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "conga-slap-2",
@@ -1491,7 +1639,8 @@
       "file": "perc/conga-slap-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "conga-slap-3",
@@ -1501,7 +1650,8 @@
       "file": "perc/conga-slap-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.42
     },
     {
       "id": "cowbell-1",
@@ -1511,7 +1661,8 @@
       "file": "perc/cowbell-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "cowbell-2",
@@ -1521,7 +1672,8 @@
       "file": "perc/cowbell-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "cowbell-3",
@@ -1531,7 +1683,8 @@
       "file": "perc/cowbell-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.4
     },
     {
       "id": "snap-1",
@@ -1541,7 +1694,8 @@
       "file": "perc/snap-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.12
     },
     {
       "id": "snap-2",
@@ -1551,7 +1705,8 @@
       "file": "perc/snap-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.12
     },
     {
       "id": "snap-3",
@@ -1561,7 +1716,8 @@
       "file": "perc/snap-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.12
     },
     {
       "id": "guiro-1",
@@ -1571,7 +1727,8 @@
       "file": "perc/guiro-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "guiro-2",
@@ -1581,7 +1738,8 @@
       "file": "perc/guiro-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "guiro-3",
@@ -1591,7 +1749,8 @@
       "file": "perc/guiro-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.32
     },
     {
       "id": "maracas-1",
@@ -1601,7 +1760,8 @@
       "file": "perc/maracas-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.16
     },
     {
       "id": "maracas-2",
@@ -1611,7 +1771,8 @@
       "file": "perc/maracas-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "maracas-3",
@@ -1621,7 +1782,8 @@
       "file": "perc/maracas-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.2
     },
     {
       "id": "rim-click-1",
@@ -1631,7 +1793,8 @@
       "file": "perc/rim-click-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "rim-click-2",
@@ -1641,7 +1804,8 @@
       "file": "perc/rim-click-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "rim-click-3",
@@ -1651,7 +1815,8 @@
       "file": "perc/rim-click-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "shaker",
@@ -1661,7 +1826,8 @@
       "file": "perc/shaker.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "shaker-1",
@@ -1671,7 +1837,8 @@
       "file": "perc/shaker-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.16
     },
     {
       "id": "shaker-3",
@@ -1681,7 +1848,8 @@
       "file": "perc/shaker-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.2
     },
     {
       "id": "tamb-1",
@@ -1691,7 +1859,8 @@
       "file": "perc/tamb-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.4
     },
     {
       "id": "tamb-2",
@@ -1701,7 +1870,8 @@
       "file": "perc/tamb-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "tamb-3",
@@ -1711,7 +1881,8 @@
       "file": "perc/tamb-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "triangle-1",
@@ -1721,7 +1892,8 @@
       "file": "perc/triangle-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.85
     },
     {
       "id": "triangle-2",
@@ -1731,7 +1903,8 @@
       "file": "perc/triangle-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.0
     },
     {
       "id": "triangle-3",
@@ -1741,7 +1914,8 @@
       "file": "perc/triangle-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.15
     },
     {
       "id": "wood-hi-1",
@@ -1751,7 +1925,8 @@
       "file": "perc/wood-hi-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "wood-hi-2",
@@ -1761,7 +1936,8 @@
       "file": "perc/wood-hi-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "wood-hi-3",
@@ -1771,7 +1947,8 @@
       "file": "perc/wood-hi-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "wood-lo-1",
@@ -1781,7 +1958,8 @@
       "file": "perc/wood-lo-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "wood-lo-2",
@@ -1791,7 +1969,8 @@
       "file": "perc/wood-lo-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "wood-lo-3",
@@ -1801,7 +1980,8 @@
       "file": "perc/wood-lo-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.18
     },
     {
       "id": "bass-bb",
@@ -1811,7 +1991,8 @@
       "file": "bass/bass-bb.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "bass-c",
@@ -1821,7 +2002,8 @@
       "file": "bass/bass-c.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "bass-eb",
@@ -1831,7 +2013,8 @@
       "file": "bass/bass-eb.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "bass-f",
@@ -1841,7 +2024,8 @@
       "file": "bass/bass-f.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "bass-g",
@@ -1851,7 +2035,8 @@
       "file": "bass/bass-g.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "saw-as2",
@@ -1861,7 +2046,8 @@
       "file": "bass/saw-as2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-as3",
@@ -1871,7 +2057,8 @@
       "file": "bass/saw-as3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-a2",
@@ -1881,7 +2068,8 @@
       "file": "bass/saw-a2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-a3",
@@ -1891,7 +2079,8 @@
       "file": "bass/saw-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-b2",
@@ -1901,7 +2090,8 @@
       "file": "bass/saw-b2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-b3",
@@ -1911,7 +2101,8 @@
       "file": "bass/saw-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-cs2",
@@ -1921,7 +2112,8 @@
       "file": "bass/saw-cs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-cs3",
@@ -1931,7 +2123,8 @@
       "file": "bass/saw-cs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-c2",
@@ -1941,7 +2134,8 @@
       "file": "bass/saw-c2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-c3",
@@ -1951,7 +2145,8 @@
       "file": "bass/saw-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-c4",
@@ -1961,7 +2156,8 @@
       "file": "bass/saw-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-ds2",
@@ -1971,7 +2167,8 @@
       "file": "bass/saw-ds2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-ds3",
@@ -1981,7 +2178,8 @@
       "file": "bass/saw-ds3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-d2",
@@ -1991,7 +2189,8 @@
       "file": "bass/saw-d2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-d3",
@@ -2001,7 +2200,8 @@
       "file": "bass/saw-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-e2",
@@ -2011,7 +2211,8 @@
       "file": "bass/saw-e2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-e3",
@@ -2021,7 +2222,8 @@
       "file": "bass/saw-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-fs2",
@@ -2031,7 +2233,8 @@
       "file": "bass/saw-fs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-fs3",
@@ -2041,7 +2244,8 @@
       "file": "bass/saw-fs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-f2",
@@ -2051,7 +2255,8 @@
       "file": "bass/saw-f2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-f3",
@@ -2061,7 +2266,8 @@
       "file": "bass/saw-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-gs2",
@@ -2071,7 +2277,8 @@
       "file": "bass/saw-gs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-gs3",
@@ -2081,7 +2288,8 @@
       "file": "bass/saw-gs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-g2",
@@ -2091,7 +2299,8 @@
       "file": "bass/saw-g2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "saw-g3",
@@ -2101,7 +2310,8 @@
       "file": "bass/saw-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.48
     },
     {
       "id": "sub-as2",
@@ -2111,7 +2321,8 @@
       "file": "bass/sub-as2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-a1",
@@ -2121,7 +2332,8 @@
       "file": "bass/sub-a1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-a2",
@@ -2131,7 +2343,8 @@
       "file": "bass/sub-a2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-b1",
@@ -2141,7 +2354,8 @@
       "file": "bass/sub-b1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-b2",
@@ -2151,7 +2365,8 @@
       "file": "bass/sub-b2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-cs2",
@@ -2161,7 +2376,8 @@
       "file": "bass/sub-cs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-cs3",
@@ -2171,7 +2387,8 @@
       "file": "bass/sub-cs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-c3",
@@ -2181,7 +2398,8 @@
       "file": "bass/sub-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-ds3",
@@ -2191,7 +2409,8 @@
       "file": "bass/sub-ds3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-d2",
@@ -2201,7 +2420,8 @@
       "file": "bass/sub-d2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-d3",
@@ -2211,7 +2431,8 @@
       "file": "bass/sub-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-e1",
@@ -2221,7 +2442,8 @@
       "file": "bass/sub-e1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-e2",
@@ -2231,7 +2453,8 @@
       "file": "bass/sub-e2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-e3",
@@ -2241,7 +2464,8 @@
       "file": "bass/sub-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-fs1",
@@ -2251,7 +2475,8 @@
       "file": "bass/sub-fs1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-fs2",
@@ -2261,7 +2486,8 @@
       "file": "bass/sub-fs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-f1",
@@ -2271,7 +2497,8 @@
       "file": "bass/sub-f1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-gs1",
@@ -2281,7 +2508,8 @@
       "file": "bass/sub-gs1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-gs2",
@@ -2291,7 +2519,8 @@
       "file": "bass/sub-gs2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "sub-g1",
@@ -2301,7 +2530,8 @@
       "file": "bass/sub-g1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "chord-a3-maj",
@@ -2311,7 +2541,8 @@
       "file": "keys/chord-a3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-a3-min",
@@ -2321,7 +2552,8 @@
       "file": "keys/chord-a3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-b3-maj",
@@ -2331,7 +2563,8 @@
       "file": "keys/chord-b3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-b3-min",
@@ -2341,7 +2574,8 @@
       "file": "keys/chord-b3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-c3-maj",
@@ -2351,7 +2585,8 @@
       "file": "keys/chord-c3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-c3-min",
@@ -2361,7 +2596,8 @@
       "file": "keys/chord-c3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-c4-min",
@@ -2371,7 +2607,8 @@
       "file": "keys/chord-c4-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-d3-maj",
@@ -2381,7 +2618,8 @@
       "file": "keys/chord-d3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-d3-min",
@@ -2391,7 +2629,8 @@
       "file": "keys/chord-d3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-e3-maj",
@@ -2401,7 +2640,8 @@
       "file": "keys/chord-e3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-e3-min",
@@ -2411,7 +2651,8 @@
       "file": "keys/chord-e3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-f3-maj",
@@ -2421,7 +2662,8 @@
       "file": "keys/chord-f3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-f3-min",
@@ -2431,7 +2673,8 @@
       "file": "keys/chord-f3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-g3-maj",
@@ -2441,7 +2684,8 @@
       "file": "keys/chord-g3-maj.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord-g3-min",
@@ -2451,7 +2695,8 @@
       "file": "keys/chord-g3-min.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "chord",
@@ -2461,7 +2706,8 @@
       "file": "keys/chord.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.5
     },
     {
       "id": "ep-as3",
@@ -2471,7 +2717,8 @@
       "file": "keys/ep-as3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-as5",
@@ -2481,7 +2728,8 @@
       "file": "keys/ep-as5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-a3",
@@ -2491,7 +2739,8 @@
       "file": "keys/ep-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-a4",
@@ -2501,7 +2750,8 @@
       "file": "keys/ep-a4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-a5",
@@ -2511,7 +2761,8 @@
       "file": "keys/ep-a5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-b3",
@@ -2521,7 +2772,8 @@
       "file": "keys/ep-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-b4",
@@ -2531,7 +2783,8 @@
       "file": "keys/ep-b4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-b5",
@@ -2541,7 +2794,8 @@
       "file": "keys/ep-b5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-cs3",
@@ -2551,7 +2805,8 @@
       "file": "keys/ep-cs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-cs4",
@@ -2561,7 +2816,8 @@
       "file": "keys/ep-cs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-cs5",
@@ -2571,7 +2827,8 @@
       "file": "keys/ep-cs5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-c3",
@@ -2581,7 +2838,8 @@
       "file": "keys/ep-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-c5",
@@ -2591,7 +2849,8 @@
       "file": "keys/ep-c5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-c6",
@@ -2601,7 +2860,8 @@
       "file": "keys/ep-c6.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-ds3",
@@ -2611,7 +2871,8 @@
       "file": "keys/ep-ds3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-ds5",
@@ -2621,7 +2882,8 @@
       "file": "keys/ep-ds5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-d3",
@@ -2631,7 +2893,8 @@
       "file": "keys/ep-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-d4",
@@ -2641,7 +2904,8 @@
       "file": "keys/ep-d4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-d5",
@@ -2651,7 +2915,8 @@
       "file": "keys/ep-d5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-e3",
@@ -2661,7 +2926,8 @@
       "file": "keys/ep-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-e4",
@@ -2671,7 +2937,8 @@
       "file": "keys/ep-e4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-e5",
@@ -2681,7 +2948,8 @@
       "file": "keys/ep-e5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-fs3",
@@ -2691,7 +2959,8 @@
       "file": "keys/ep-fs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-fs4",
@@ -2701,7 +2970,8 @@
       "file": "keys/ep-fs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-fs5",
@@ -2711,7 +2981,8 @@
       "file": "keys/ep-fs5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-f3",
@@ -2721,7 +2992,8 @@
       "file": "keys/ep-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-f4",
@@ -2731,7 +3003,8 @@
       "file": "keys/ep-f4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-f5",
@@ -2741,7 +3014,8 @@
       "file": "keys/ep-f5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-gs3",
@@ -2751,7 +3025,8 @@
       "file": "keys/ep-gs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-gs4",
@@ -2761,7 +3036,8 @@
       "file": "keys/ep-gs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-gs5",
@@ -2771,7 +3047,8 @@
       "file": "keys/ep-gs5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-g3",
@@ -2781,7 +3058,8 @@
       "file": "keys/ep-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "ep-g5",
@@ -2791,7 +3069,8 @@
       "file": "keys/ep-g5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "key-bb",
@@ -2801,7 +3080,8 @@
       "file": "keys/key-bb.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "key-c",
@@ -2811,7 +3091,8 @@
       "file": "keys/key-c.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "key-eb",
@@ -2821,7 +3102,8 @@
       "file": "keys/key-eb.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "key-g",
@@ -2831,7 +3113,8 @@
       "file": "keys/key-g.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "pluck-as3",
@@ -2841,7 +3124,8 @@
       "file": "keys/pluck-as3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-as4",
@@ -2851,7 +3135,8 @@
       "file": "keys/pluck-as4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-a3",
@@ -2861,7 +3146,8 @@
       "file": "keys/pluck-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-a4",
@@ -2871,7 +3157,8 @@
       "file": "keys/pluck-a4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-b3",
@@ -2881,7 +3168,8 @@
       "file": "keys/pluck-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-b4",
@@ -2891,7 +3179,8 @@
       "file": "keys/pluck-b4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-cs3",
@@ -2901,7 +3190,8 @@
       "file": "keys/pluck-cs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-cs4",
@@ -2911,7 +3201,8 @@
       "file": "keys/pluck-cs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-c3",
@@ -2921,7 +3212,8 @@
       "file": "keys/pluck-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-c4",
@@ -2931,7 +3223,8 @@
       "file": "keys/pluck-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-c5",
@@ -2941,7 +3234,8 @@
       "file": "keys/pluck-c5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-ds3",
@@ -2951,7 +3245,8 @@
       "file": "keys/pluck-ds3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-ds4",
@@ -2961,7 +3256,8 @@
       "file": "keys/pluck-ds4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-d3",
@@ -2971,7 +3267,8 @@
       "file": "keys/pluck-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-d4",
@@ -2981,7 +3278,8 @@
       "file": "keys/pluck-d4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-e3",
@@ -2991,7 +3289,8 @@
       "file": "keys/pluck-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-e4",
@@ -3001,7 +3300,8 @@
       "file": "keys/pluck-e4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-fs3",
@@ -3011,7 +3311,8 @@
       "file": "keys/pluck-fs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-fs4",
@@ -3021,7 +3322,8 @@
       "file": "keys/pluck-fs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-f3",
@@ -3031,7 +3333,8 @@
       "file": "keys/pluck-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-f4",
@@ -3041,7 +3344,8 @@
       "file": "keys/pluck-f4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-gs3",
@@ -3051,7 +3355,8 @@
       "file": "keys/pluck-gs3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-gs4",
@@ -3061,7 +3366,8 @@
       "file": "keys/pluck-gs4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-g3",
@@ -3071,7 +3377,8 @@
       "file": "keys/pluck-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "pluck-g4",
@@ -3081,7 +3388,8 @@
       "file": "keys/pluck-g4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.62
     },
     {
       "id": "vox-ah-a3",
@@ -3091,7 +3399,8 @@
       "file": "vocal/vox-ah-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-b3",
@@ -3101,7 +3410,8 @@
       "file": "vocal/vox-ah-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-c3",
@@ -3111,7 +3421,8 @@
       "file": "vocal/vox-ah-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-c4",
@@ -3121,7 +3432,8 @@
       "file": "vocal/vox-ah-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-d3",
@@ -3131,7 +3443,8 @@
       "file": "vocal/vox-ah-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-e3",
@@ -3141,7 +3454,8 @@
       "file": "vocal/vox-ah-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-f3",
@@ -3151,7 +3465,8 @@
       "file": "vocal/vox-ah-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ah-g3",
@@ -3161,7 +3476,8 @@
       "file": "vocal/vox-ah-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-a3",
@@ -3171,7 +3487,8 @@
       "file": "vocal/vox-ee-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-b3",
@@ -3181,7 +3498,8 @@
       "file": "vocal/vox-ee-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-c3",
@@ -3191,7 +3509,8 @@
       "file": "vocal/vox-ee-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-c4",
@@ -3201,7 +3520,8 @@
       "file": "vocal/vox-ee-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-d3",
@@ -3211,7 +3531,8 @@
       "file": "vocal/vox-ee-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-e3",
@@ -3221,7 +3542,8 @@
       "file": "vocal/vox-ee-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-f3",
@@ -3231,7 +3553,8 @@
       "file": "vocal/vox-ee-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-ee-g3",
@@ -3241,7 +3564,8 @@
       "file": "vocal/vox-ee-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-a3",
@@ -3251,7 +3575,8 @@
       "file": "vocal/vox-eh-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-b3",
@@ -3261,7 +3586,8 @@
       "file": "vocal/vox-eh-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-c3",
@@ -3271,7 +3597,8 @@
       "file": "vocal/vox-eh-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-c4",
@@ -3281,7 +3608,8 @@
       "file": "vocal/vox-eh-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-d3",
@@ -3291,7 +3619,8 @@
       "file": "vocal/vox-eh-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-e3",
@@ -3301,7 +3630,8 @@
       "file": "vocal/vox-eh-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-f3",
@@ -3311,7 +3641,8 @@
       "file": "vocal/vox-eh-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-eh-g3",
@@ -3321,7 +3652,8 @@
       "file": "vocal/vox-eh-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-a3",
@@ -3331,7 +3663,8 @@
       "file": "vocal/vox-oh-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-b3",
@@ -3341,7 +3674,8 @@
       "file": "vocal/vox-oh-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-c3",
@@ -3351,7 +3685,8 @@
       "file": "vocal/vox-oh-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-c4",
@@ -3361,7 +3696,8 @@
       "file": "vocal/vox-oh-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-d3",
@@ -3371,7 +3707,8 @@
       "file": "vocal/vox-oh-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-e3",
@@ -3381,7 +3718,8 @@
       "file": "vocal/vox-oh-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-f3",
@@ -3391,7 +3729,8 @@
       "file": "vocal/vox-oh-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oh-g3",
@@ -3401,7 +3740,8 @@
       "file": "vocal/vox-oh-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-a3",
@@ -3411,7 +3751,8 @@
       "file": "vocal/vox-oo-a3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-b3",
@@ -3421,7 +3762,8 @@
       "file": "vocal/vox-oo-b3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-c3",
@@ -3431,7 +3773,8 @@
       "file": "vocal/vox-oo-c3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-c4",
@@ -3441,7 +3784,8 @@
       "file": "vocal/vox-oo-c4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-d3",
@@ -3451,7 +3795,8 @@
       "file": "vocal/vox-oo-d3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-e3",
@@ -3461,7 +3806,8 @@
       "file": "vocal/vox-oo-e3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-f3",
@@ -3471,7 +3817,8 @@
       "file": "vocal/vox-oo-f3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "vox-oo-g3",
@@ -3481,7 +3828,8 @@
       "file": "vocal/vox-oo-g3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.36
     },
     {
       "id": "down-1",
@@ -3491,7 +3839,8 @@
       "file": "fx/down-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.8
     },
     {
       "id": "down-2",
@@ -3501,7 +3850,8 @@
       "file": "fx/down-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.95
     },
     {
       "id": "down-3",
@@ -3511,7 +3861,8 @@
       "file": "fx/down-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.1
     },
     {
       "id": "down-4",
@@ -3521,7 +3872,8 @@
       "file": "fx/down-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.25
     },
     {
       "id": "drop-1",
@@ -3531,7 +3883,8 @@
       "file": "fx/drop-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.7
     },
     {
       "id": "drop-2",
@@ -3541,7 +3894,8 @@
       "file": "fx/drop-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.7
     },
     {
       "id": "drop-3",
@@ -3551,7 +3905,8 @@
       "file": "fx/drop-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.7
     },
     {
       "id": "drop-4",
@@ -3561,7 +3916,8 @@
       "file": "fx/drop-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.7
     },
     {
       "id": "impact-1",
@@ -3571,7 +3927,8 @@
       "file": "fx/impact-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.55
     },
     {
       "id": "impact-2",
@@ -3581,7 +3938,8 @@
       "file": "fx/impact-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.63
     },
     {
       "id": "impact-3",
@@ -3591,7 +3949,8 @@
       "file": "fx/impact-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.71
     },
     {
       "id": "impact-4",
@@ -3601,7 +3960,8 @@
       "file": "fx/impact-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.79
     },
     {
       "id": "impact-5",
@@ -3611,7 +3971,8 @@
       "file": "fx/impact-5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.87
     },
     {
       "id": "impact-6",
@@ -3621,7 +3982,8 @@
       "file": "fx/impact-6.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.95
     },
     {
       "id": "noise-1",
@@ -3631,7 +3993,8 @@
       "file": "fx/noise-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.2
     },
     {
       "id": "noise-2",
@@ -3641,7 +4004,8 @@
       "file": "fx/noise-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.25
     },
     {
       "id": "noise-3",
@@ -3651,7 +4015,8 @@
       "file": "fx/noise-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.3
     },
     {
       "id": "noise-4",
@@ -3661,7 +4026,8 @@
       "file": "fx/noise-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.35
     },
     {
       "id": "reverse-1",
@@ -3671,7 +4037,8 @@
       "file": "fx/reverse-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.9
     },
     {
       "id": "reverse-2",
@@ -3681,7 +4048,8 @@
       "file": "fx/reverse-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.9
     },
     {
       "id": "reverse-3",
@@ -3691,7 +4059,8 @@
       "file": "fx/reverse-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.9
     },
     {
       "id": "reverse-4",
@@ -3701,7 +4070,8 @@
       "file": "fx/reverse-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.9
     },
     {
       "id": "rise",
@@ -3711,7 +4081,8 @@
       "file": "fx/rise.wav",
       "bpm": 100,
       "bars": 1,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.7
     },
     {
       "id": "rise-1",
@@ -3721,7 +4092,8 @@
       "file": "fx/rise-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.2
     },
     {
       "id": "rise-3",
@@ -3731,7 +4103,8 @@
       "file": "fx/rise-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 2.2
     },
     {
       "id": "rise-4",
@@ -3741,7 +4114,8 @@
       "file": "fx/rise-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 1.2
     },
     {
       "id": "zap-1",
@@ -3751,7 +4125,8 @@
       "file": "fx/zap-1.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.25
     },
     {
       "id": "zap-2",
@@ -3761,7 +4136,8 @@
       "file": "fx/zap-2.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.29
     },
     {
       "id": "zap-3",
@@ -3771,7 +4147,8 @@
       "file": "fx/zap-3.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.33
     },
     {
       "id": "zap-4",
@@ -3781,7 +4158,8 @@
       "file": "fx/zap-4.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.37
     },
     {
       "id": "zap-5",
@@ -3791,7 +4169,8 @@
       "file": "fx/zap-5.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.41
     },
     {
       "id": "zap-6",
@@ -3801,7 +4180,8 @@
       "file": "fx/zap-6.wav",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 0.45
     },
     {
       "id": "amb-air-0",
@@ -3811,7 +4191,8 @@
       "file": "ambience/amb-air-0.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-crackle-6",
@@ -3821,7 +4202,8 @@
       "file": "ambience/amb-crackle-6.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-drone-11",
@@ -3831,7 +4213,8 @@
       "file": "ambience/amb-drone-11.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-drone-9",
@@ -3841,7 +4224,8 @@
       "file": "ambience/amb-drone-9.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-drone-10",
@@ -3851,7 +4235,8 @@
       "file": "ambience/amb-drone-10.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-hum-8",
@@ -3861,7 +4246,8 @@
       "file": "ambience/amb-hum-8.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-night-7",
@@ -3871,7 +4257,8 @@
       "file": "ambience/amb-night-7.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-rain-1",
@@ -3881,7 +4268,8 @@
       "file": "ambience/amb-rain-1.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-room-5",
@@ -3891,7 +4279,8 @@
       "file": "ambience/amb-room-5.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-rumble-2",
@@ -3901,7 +4290,8 @@
       "file": "ambience/amb-rumble-2.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "amb-sea-4",
@@ -3911,7 +4301,8 @@
       "file": "ambience/amb-sea-4.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "wash",
@@ -3921,7 +4312,8 @@
       "file": "ambience/wash.mp3",
       "bpm": 100,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.859
     },
     {
       "id": "amb-wind-3",
@@ -3931,7 +4323,8 @@
       "file": "ambience/amb-wind-3.mp3",
       "bpm": null,
       "bars": null,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.056
     },
     {
       "id": "bass-loop",
@@ -3941,7 +4334,8 @@
       "file": "loops/bass-loop.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.8
     },
     {
       "id": "bass-loop-110",
@@ -3951,7 +4345,8 @@
       "file": "loops/bass-loop-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.364
     },
     {
       "id": "bass-loop-120",
@@ -3961,7 +4356,8 @@
       "file": "loops/bass-loop-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.0
     },
     {
       "id": "bass-loop-128",
@@ -3971,7 +4367,8 @@
       "file": "loops/bass-loop-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.75
     },
     {
       "id": "bass-loop-140",
@@ -3981,7 +4378,8 @@
       "file": "loops/bass-loop-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.429
     },
     {
       "id": "bass-loop-80",
@@ -3991,7 +4389,8 @@
       "file": "loops/bass-loop-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 6.0
     },
     {
       "id": "bass-loop-90",
@@ -4001,7 +4400,8 @@
       "file": "loops/bass-loop-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 5.333
     },
     {
       "id": "loop-break-100",
@@ -4011,7 +4411,8 @@
       "file": "loops/loop-break-100.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.8
     },
     {
       "id": "loop-break-110",
@@ -4021,7 +4422,8 @@
       "file": "loops/loop-break-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.364
     },
     {
       "id": "loop-break-120",
@@ -4031,7 +4433,8 @@
       "file": "loops/loop-break-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.0
     },
     {
       "id": "loop-break-128",
@@ -4041,7 +4444,8 @@
       "file": "loops/loop-break-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.75
     },
     {
       "id": "loop-break-140",
@@ -4051,7 +4455,8 @@
       "file": "loops/loop-break-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.429
     },
     {
       "id": "loop-break-80",
@@ -4061,7 +4466,8 @@
       "file": "loops/loop-break-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 6.0
     },
     {
       "id": "loop-break-90",
@@ -4071,7 +4477,8 @@
       "file": "loops/loop-break-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 5.333
     },
     {
       "id": "halftime",
@@ -4081,7 +4488,8 @@
       "file": "loops/halftime.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.8
     },
     {
       "id": "loop-halftime-110",
@@ -4091,7 +4499,8 @@
       "file": "loops/loop-halftime-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.364
     },
     {
       "id": "loop-halftime-120",
@@ -4101,7 +4510,8 @@
       "file": "loops/loop-halftime-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.0
     },
     {
       "id": "loop-halftime-128",
@@ -4111,7 +4521,8 @@
       "file": "loops/loop-halftime-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.75
     },
     {
       "id": "loop-halftime-140",
@@ -4121,7 +4532,8 @@
       "file": "loops/loop-halftime-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.429
     },
     {
       "id": "loop-halftime-80",
@@ -4131,7 +4543,8 @@
       "file": "loops/loop-halftime-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 6.0
     },
     {
       "id": "loop-halftime-90",
@@ -4141,7 +4554,8 @@
       "file": "loops/loop-halftime-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 5.333
     },
     {
       "id": "loop-house-110",
@@ -4151,7 +4565,8 @@
       "file": "loops/loop-house-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.364
     },
     {
       "id": "loop-house-120",
@@ -4161,7 +4576,8 @@
       "file": "loops/loop-house-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.0
     },
     {
       "id": "loop-house-128",
@@ -4171,7 +4587,8 @@
       "file": "loops/loop-house-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.75
     },
     {
       "id": "loop-house-140",
@@ -4181,7 +4598,8 @@
       "file": "loops/loop-house-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.429
     },
     {
       "id": "loop-house-80",
@@ -4191,7 +4609,8 @@
       "file": "loops/loop-house-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 6.0
     },
     {
       "id": "loop-house-90",
@@ -4201,7 +4620,8 @@
       "file": "loops/loop-house-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 5.333
     },
     {
       "id": "house",
@@ -4211,7 +4631,8 @@
       "file": "loops/house.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.8
     },
     {
       "id": "pad",
@@ -4221,7 +4642,8 @@
       "file": "loops/pad.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.8
     },
     {
       "id": "pad-110",
@@ -4231,7 +4653,8 @@
       "file": "loops/pad-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.364
     },
     {
       "id": "pad-120",
@@ -4241,7 +4664,8 @@
       "file": "loops/pad-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.0
     },
     {
       "id": "pad-128",
@@ -4251,7 +4675,8 @@
       "file": "loops/pad-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.75
     },
     {
       "id": "pad-140",
@@ -4261,7 +4686,8 @@
       "file": "loops/pad-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.429
     },
     {
       "id": "pad-80",
@@ -4271,7 +4697,8 @@
       "file": "loops/pad-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 6.0
     },
     {
       "id": "pad-90",
@@ -4281,7 +4708,8 @@
       "file": "loops/pad-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 5.333
     },
     {
       "id": "perc-loop",
@@ -4291,7 +4719,8 @@
       "file": "loops/perc-loop.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.8
     },
     {
       "id": "perc-loop-110",
@@ -4301,7 +4730,8 @@
       "file": "loops/perc-loop-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.364
     },
     {
       "id": "perc-loop-120",
@@ -4311,7 +4741,8 @@
       "file": "loops/perc-loop-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 4.0
     },
     {
       "id": "perc-loop-128",
@@ -4321,7 +4752,8 @@
       "file": "loops/perc-loop-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.75
     },
     {
       "id": "perc-loop-140",
@@ -4331,7 +4763,8 @@
       "file": "loops/perc-loop-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 3.429
     },
     {
       "id": "perc-loop-80",
@@ -4341,7 +4774,8 @@
       "file": "loops/perc-loop-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 6.0
     },
     {
       "id": "perc-loop-90",
@@ -4351,7 +4785,8 @@
       "file": "loops/perc-loop-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "virtuosity"
+      "credit": "virtuosity",
+      "seconds": 5.333
     },
     {
       "id": "loop-shuffle-100",
@@ -4361,7 +4796,8 @@
       "file": "loops/loop-shuffle-100.wav",
       "bpm": 100,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.8
     },
     {
       "id": "loop-shuffle-110",
@@ -4371,7 +4807,8 @@
       "file": "loops/loop-shuffle-110.wav",
       "bpm": 110,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.364
     },
     {
       "id": "loop-shuffle-120",
@@ -4381,7 +4818,8 @@
       "file": "loops/loop-shuffle-120.wav",
       "bpm": 120,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 4.0
     },
     {
       "id": "loop-shuffle-128",
@@ -4391,7 +4829,8 @@
       "file": "loops/loop-shuffle-128.wav",
       "bpm": 128,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.75
     },
     {
       "id": "loop-shuffle-140",
@@ -4401,7 +4840,8 @@
       "file": "loops/loop-shuffle-140.wav",
       "bpm": 140,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 3.429
     },
     {
       "id": "loop-shuffle-80",
@@ -4411,7 +4851,8 @@
       "file": "loops/loop-shuffle-80.wav",
       "bpm": 80,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 6.0
     },
     {
       "id": "loop-shuffle-90",
@@ -4421,7 +4862,8 @@
       "file": "loops/loop-shuffle-90.wav",
       "bpm": 90,
       "bars": 2,
-      "credit": "original"
+      "credit": "original",
+      "seconds": 5.333
     }
   ]
 }
