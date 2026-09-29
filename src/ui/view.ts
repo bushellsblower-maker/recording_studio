@@ -8,6 +8,7 @@ import { createFader, createKnob, type Control } from './controls';
 import type { KeyVoiceRequest } from '../audio/voices';
 import { attachDeskLayout } from './desk-layout';
 import { buildDevices } from './devices';
+import { buildInstructions } from './instructions';
 import { buildLibrary } from './library';
 
 export interface ConsoleHandlers {
@@ -233,7 +234,8 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const brandGroup = document.createElement('div');
   brandGroup.className = 'tool-group';
   brandGroup.append(brand, pills);
-  top.append(brandGroup, clockWrap, headMeters, power);
+  const instructions = buildInstructions();
+  top.append(brandGroup, clockWrap, headMeters, power, instructions.button);
 
   const rec = button('REC', 'btn rec');
   const stop = button('STOP', 'btn stop');

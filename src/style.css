@@ -1140,7 +1140,7 @@ select {
   .brand p { display: none; }
   .topbar { gap: 8px; }
   .pills .rate { display: none; }
-  .btn.rec, .btn.stop, .btn.play, .btn.reset, .btn.power, .zone-tab { min-height: 44px; }
+  .btn.rec, .btn.stop, .btn.play, .btn.reset, .btn.power, .zone-tab, .instructions-open, .help-close { min-height: 44px; }
   .knob-dial { width: 52px; height: 52px; }
   .knob-mark { top: 8px; height: 14px; transform-origin: center 18px; }
   .library-search { min-height: 40px; padding: 8px 10px; }
@@ -1892,6 +1892,107 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
     height: 92px;
     min-height: 0;
   }
+}
+
+html.help-open { overflow: hidden; }
+
+.help-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.help-layer[hidden] { display: none; }
+
+.help-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(8, 10, 14, 0.72);
+  cursor: pointer;
+}
+
+.help-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 100%);
+  max-height: min(820px, calc(100dvh - 48px));
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.help-head h2 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.help-body {
+  overflow: auto;
+  padding: 4px 14px 18px;
+  overscroll-behavior: contain;
+}
+
+.help-section { margin-top: 14px; }
+
+.help-section h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.help-intro {
+  margin: 0 0 8px;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.help-list { margin: 0; }
+
+.help-list dt {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--amber);
+}
+
+.help-list dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+@media (max-width: 899px) {
+  .help-layer { padding: 8px; }
+  .help-dialog { max-height: calc(100dvh - 16px); }
 }
 
 @container device-pane (max-width: 620px) {
