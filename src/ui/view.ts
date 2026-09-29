@@ -1,6 +1,6 @@
 import type { SampleMeta } from '../audio/library';
 import { DEFAULTS, RANGES } from '../defaults';
-import { formatBarBeat, formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
+import { formatBarBeat, formatBeatPosition, formatBpm, formatDb, formatHz, formatMeterDb, formatMs, formatPan, formatPercent, formatQ, formatRatio, formatTime, meterPercent } from '../audio/units';
 import type { EngineSnapshot, InputMode, Levels, MicState, ToneShape } from '../types';
 import { TRACK_COUNT } from '../types';
 import { createFader, createKnob, type Control } from './controls';
@@ -68,9 +68,9 @@ export interface ConsoleHandlers {
   downloadMix: () => void;
   undo: () => void;
   loop: (on: boolean) => void;
-  loopStart: (bar: number) => void;
-  loopBars: (bars: number) => void;
-  loopRegion: (startBar: number, bars: number) => void;
+  playRange: (fromBeat: number, toBeat: number, loop?: boolean) => void;
+  clearRange: () => void;
+  loopSelection: (startBeat: number, lengthBeats: number) => void;
   previewSample: (id: string) => void;
   loadSample: (id: string) => void;
   triggerSample: (id: string) => void;
@@ -92,6 +92,7 @@ export interface PaintFrame extends Levels {
   loopStartBeat: number;
   loopBeats: number;
   looping: boolean;
+  rangeCustom: boolean;
   recording: boolean;
   playing: boolean;
   suspended: boolean;
@@ -201,31 +202,6 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     quantize.classList.toggle('on', next);
     quantize.setAttribute('aria-pressed', String(next));
   });
-  const loop = button('LOOP', 'btn small');
-  loop.setAttribute('aria-pressed', 'false');
-  loop.addEventListener('click', () => {
-    if (!last) return;
-    handlers.loop(!last.loopOn);
-  });
-  const loopStart = document.createElement('input');
-  loopStart.type = 'number';
-  loopStart.className = 'loop-input';
-  loopStart.min = '1';
-  loopStart.max = '64';
-  loopStart.step = '1';
-  loopStart.value = '1';
-  loopStart.setAttribute('aria-label', 'Loop start bar');
-  loopStart.addEventListener('change', () => handlers.loopStart(Number(loopStart.value)));
-  const loopBars = document.createElement('select');
-  loopBars.setAttribute('aria-label', 'Loop length in bars');
-  for (const bars of [1, 2, 4, 8]) {
-    const option = document.createElement('option');
-    option.value = String(bars);
-    option.textContent = `${bars} bar${bars === 1 ? '' : 's'}`;
-    option.selected = bars === 2;
-    loopBars.append(option);
-  }
-  loopBars.addEventListener('change', () => handlers.loopBars(Number(loopBars.value)));
   const bpm = knob('BPM', RANGES.metroBpm, DEFAULTS.metroBpm, formatBpm, handlers.metroBpm, 'Metronome tempo');
   const metroLevel = knob('CLICK', RANGES.metroLevel, DEFAULTS.metroLevel, formatPercent, handlers.metroLevel, 'Metronome level');
 
@@ -236,10 +212,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   transportButtons.append(rec, stop, play, undo, reset);
   const metroBox = document.createElement('div');
   metroBox.className = 'metro';
-  const loopLabel = document.createElement('span');
-  loopLabel.className = 'loop-label';
-  loopLabel.textContent = 'from bar';
-  metroBox.append(metro, quantize, bpm.root, metroLevel.root, loop, loopLabel, loopStart, loopBars);
+  metroBox.append(metro, quantize, bpm.root, metroLevel.root);
   transport.append(transportButtons, metroBox);
 
   const micButton = button('Enable microphone', 'btn small wide');
@@ -453,9 +426,11 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   let arrangeBeats = 16;
   const dragBeats = new Map<number, number>();
   let dragging: { index: number; origin: number; grab: number } | null = null;
-  let loopPreview: { startBeat: number; bars: number } | null = null;
+  let loopPreview: { startBeat: number; endBeat: number } | null = null;
   let rulerAnchor = 0;
   let rulerActive = false;
+  let rulerFine = false;
+  let rangeEditing = false;
   let spans: { startBeat: number; lengthBeats: number }[] = [];
 
   const ruler = document.createElement('div');
@@ -481,23 +456,23 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     if (last?.mode === 'recording' || last?.mode === 'stopping') return;
     rulerCanvas.setPointerCapture(event.pointerId);
     rulerActive = true;
+    rulerFine = event.shiftKey;
     rulerAnchor = beatFromClient(rulerCanvas, event.clientX);
-    loopPreview = loopFromDrag(rulerAnchor, rulerAnchor);
+    loopPreview = rangeFromDrag(rulerAnchor, rulerAnchor, rulerFine);
     event.preventDefault();
   });
   rulerCanvas.addEventListener('pointermove', (event) => {
     if (!rulerActive) return;
-    loopPreview = loopFromDrag(rulerAnchor, beatFromClient(rulerCanvas, event.clientX));
+    rulerFine = event.shiftKey;
+    loopPreview = rangeFromDrag(rulerAnchor, beatFromClient(rulerCanvas, event.clientX), rulerFine);
   });
   const finishRuler = (): void => {
     if (!rulerActive || !loopPreview) return;
-    const startBar = Math.min(64, Math.floor(loopPreview.startBeat / 4) + 1);
-    const bars = loopPreview.bars;
+    const startBeat = loopPreview.startBeat;
+    const endBeat = loopPreview.endBeat;
     rulerActive = false;
-    loopStart.value = String(startBar);
-    loopBars.value = String(bars);
     loopPreview = null;
-    handlers.loopRegion(startBar, bars);
+    handlers.playRange(startBeat, endBeat, true);
   };
   rulerCanvas.addEventListener('pointerup', finishRuler);
   rulerCanvas.addEventListener('pointercancel', () => {
@@ -721,14 +696,116 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   deck.className = 'deck';
   deck.append(trackList, masterPanel);
 
+  const rangeFrom = document.createElement('input');
+  rangeFrom.type = 'range';
+  rangeFrom.className = 'range-from';
+  rangeFrom.min = '0';
+  rangeFrom.max = '16';
+  rangeFrom.step = '0.01';
+  rangeFrom.value = '0';
+  rangeFrom.setAttribute('aria-label', 'Play from');
+  const rangeTo = document.createElement('input');
+  rangeTo.type = 'range';
+  rangeTo.className = 'range-to';
+  rangeTo.min = '0';
+  rangeTo.max = '16';
+  rangeTo.step = '0.01';
+  rangeTo.value = '16';
+  rangeTo.setAttribute('aria-label', 'Play to');
+  const rangeFromRead = document.createElement('span');
+  rangeFromRead.className = 'range-read';
+  const rangeToRead = document.createElement('span');
+  rangeToRead.className = 'range-read';
+
+  function paintRangeReadout(): void {
+    const from = Number(rangeFrom.value);
+    const to = Number(rangeTo.value);
+    rangeFromRead.textContent = formatBeatPosition(from);
+    rangeToRead.textContent = formatBeatPosition(to);
+    rangeFrom.setAttribute('aria-valuetext', formatBeatPosition(from));
+    rangeTo.setAttribute('aria-valuetext', formatBeatPosition(to));
+  }
+
+  function keepRangeGap(edited: HTMLInputElement): void {
+    let from = Number(rangeFrom.value);
+    let to = Number(rangeTo.value);
+    if (to >= from + 0.25) return;
+    if (edited === rangeFrom) from = Math.max(0, to - 0.25);
+    else to = Math.min(Number(rangeTo.max), from + 0.25);
+    rangeFrom.value = String(from);
+    rangeTo.value = String(to);
+  }
+
+  const onRangeInput = (event: Event): void => {
+    rangeEditing = true;
+    const edited = event.currentTarget;
+    if (edited instanceof HTMLInputElement) keepRangeGap(edited);
+    paintRangeReadout();
+  };
+  const onRangeCommit = (event: Event): void => {
+    rangeEditing = false;
+    const edited = event.currentTarget;
+    if (edited instanceof HTMLInputElement) keepRangeGap(edited);
+    paintRangeReadout();
+    handlers.playRange(Number(rangeFrom.value), Number(rangeTo.value));
+  };
+  for (const input of [rangeFrom, rangeTo]) {
+    input.addEventListener('pointerdown', () => {
+      rangeEditing = true;
+    });
+    input.addEventListener('input', onRangeInput);
+    input.addEventListener('change', onRangeCommit);
+  }
+  paintRangeReadout();
+
+  const loopRegion = button('Loop region', 'btn tiny');
+  loopRegion.setAttribute('aria-pressed', 'false');
+  loopRegion.title = 'Repeat playback between play from and play to';
+  loopRegion.addEventListener('click', () => {
+    if (!last) return;
+    const next = !last.loopOn;
+    if (next && !last.rangeCustom) {
+      const end = Math.max(1, arrangeBeats);
+      rangeFrom.value = '0';
+      rangeTo.value = String(end);
+      rangeFrom.max = String(end);
+      rangeTo.max = String(end);
+      paintRangeReadout();
+      handlers.playRange(0, end, true);
+      return;
+    }
+    handlers.loop(next);
+  });
+  const loopClip = button('Loop selection', 'btn tiny');
+  loopClip.title = 'Loop the highlighted clip from its start through its end';
+  loopClip.addEventListener('click', () => {
+    const span = spans[targetTrack];
+    handlers.loopSelection(span?.startBeat ?? 0, span?.lengthBeats ?? 0);
+  });
+  const rangeAll = button('All', 'btn tiny on');
+  rangeAll.title = 'Play the whole arrangement, ignoring the range';
+  rangeAll.setAttribute('aria-pressed', 'true');
+  rangeAll.addEventListener('click', () => handlers.clearRange());
+
+  const playRange = document.createElement('div');
+  playRange.className = 'play-range';
+  const rangeName = document.createElement('span');
+  rangeName.className = 'mix-k';
+  rangeName.textContent = 'Play';
+  const dual = document.createElement('div');
+  dual.className = 'dual-range';
+  dual.title = 'Left handle is play from, right handle is play to. Drag the bar ruler to set the same span.';
+  dual.append(rangeTo, rangeFrom);
+  playRange.append(rangeName, rangeFromRead, dual, rangeToRead, loopRegion, loopClip, rangeAll);
+
   const arrangeHead = document.createElement('div');
   arrangeHead.className = 'zone-head';
   const arrangeTitle = document.createElement('h2');
   arrangeTitle.textContent = 'Arrangement';
+  arrangeHead.append(arrangeTitle);
   const arrangeHint = document.createElement('p');
   arrangeHint.className = 'note';
-  arrangeHint.textContent = 'Highlight a track, then place or drop a sound. Drag a clip to move it. Drag the bar ruler to set the loop. Audio 1–4 print the channel. Inst 5–8 print pads and keys.';
-  arrangeHead.append(arrangeTitle, arrangeHint);
+  arrangeHint.textContent = 'Drag the play range or the bar ruler to choose where a track starts and stops. Loop region repeats that span. Loop selection repeats the highlighted clip. Shift snaps the ruler to 16ths.';
 
   const guide = document.createElement('ol');
   guide.className = 'guide';
@@ -771,31 +848,40 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
 
   const arrangeZone = document.createElement('section');
   arrangeZone.className = 'zone zone-session';
-  arrangeZone.append(arrangeHead, guideRow, deck);
+  attachCollapse(arrangeZone, arrangeHead, 'Arrangement');
+  arrangeZone.append(arrangeHead, playRange, arrangeHint, guideRow, deck);
 
   const mixHead = document.createElement('div');
   mixHead.className = 'zone-head';
   const mixTitle = document.createElement('h2');
   mixTitle.textContent = 'Console';
+  mixHead.append(mixTitle);
   const mixHint = document.createElement('p');
   mixHint.className = 'note';
   mixHint.textContent = 'The insert chips show what is printed. Monitor starts off. Delay and reverb are cue sends and are not in the WAV.';
-  mixHead.append(mixTitle, mixHint);
   const mixZone = document.createElement('section');
   mixZone.className = 'zone zone-console';
-  mixZone.append(mixHead, consoleRow);
+  attachCollapse(mixZone, mixHead, 'Console');
+  mixZone.append(mixHead, mixHint, consoleRow);
 
   const browseZone = document.createElement('section');
   browseZone.className = 'zone zone-browse';
   browseZone.append(library.element);
+  const browseHead = library.element.querySelector('.library-head');
+  if (browseHead instanceof HTMLElement) attachCollapse(library.element, browseHead, 'Browser');
 
   const playZone = document.createElement('section');
   playZone.className = 'zone zone-play';
   playZone.append(library.play);
+  const playHead = library.play.querySelector('.library-head');
+  if (playHead instanceof HTMLElement) attachCollapse(library.play, playHead, 'Pads and keys');
 
+  const deskStack = document.createElement('div');
+  deskStack.className = 'desk-stack';
+  deskStack.append(arrangeZone, mixZone, playZone);
   const desk = document.createElement('div');
   desk.className = 'desk';
-  desk.append(browseZone, mixZone, arrangeZone, playZone);
+  desk.append(browseZone, deskStack);
 
   const footer = document.createElement('details');
   footer.className = 'footer';
@@ -803,7 +889,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   footerSummary.textContent = 'Shortcuts';
   const footerCopy = document.createElement('p');
   footerCopy.textContent =
-    'Space plays or stops. R records. A–K plays the keys. Drag a sample onto the grid — it snaps to the beat, and Shift snaps to 16ths. Drag a clip to move it, or drag the ruler to set the loop. Tracks 1–4 print the channel; 5–8 print pads and keys. Headphones if you raise the monitor.';
+    'Space plays or stops. R records. A–K plays the keys. Drag a sample onto the grid — it snaps to the beat, and Shift snaps to 16ths. Drag a clip to move it. The play range sets where playback starts and stops; Loop region repeats it, and Loop selection repeats the highlighted clip. Drag the bar ruler to set that range. Tracks 1–4 print the channel; 5–8 print pads and keys. Headphones if you raise the monitor.';
   footer.append(footerSummary, footerCopy);
 
   const zoneNav = document.createElement('nav');
@@ -889,7 +975,19 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     press(inputSolo, snapshot.inputSolo);
     press(masterMute, snapshot.masterMute);
     press(metro, snapshot.metroOn);
-    press(loop, snapshot.loopOn);
+    press(loopRegion, snapshot.loopOn);
+    press(rangeAll, !snapshot.loopOn && !snapshot.rangeCustom);
+    const rangeBusy = rangeEditing || rulerActive || document.activeElement === rangeFrom || document.activeElement === rangeTo;
+    if (!rangeBusy) {
+      const shownFrom = snapshot.rangeCustom || snapshot.loopOn ? snapshot.playFromBeat : 0;
+      const shownTo = snapshot.rangeCustom || snapshot.loopOn ? snapshot.playToBeat : arrangeBeats;
+      const max = Math.max(arrangeBeats, shownTo, shownFrom + 0.25);
+      rangeFrom.max = String(max);
+      rangeTo.max = String(max);
+      rangeFrom.value = String(shownFrom);
+      rangeTo.value = String(Math.min(max, Math.max(shownFrom + 0.25, shownTo)));
+      paintRangeReadout();
+    }
     undo.disabled = locked || snapshot.mode === 'recording' || snapshot.mode === 'stopping' || !snapshot.canUndo;
     gateBtn.disabled = locked || (snapshot.powered && !snapshot.gateAvailable);
     gateNote.hidden = !snapshot.powered || snapshot.gateAvailable;
@@ -941,13 +1039,30 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     spans = frame.spans.map((span) => ({ startBeat: span.startBeat, lengthBeats: span.lengthBeats }));
     let endBeat = 16;
     for (const span of spans) endBeat = Math.max(endBeat, span.startBeat + span.lengthBeats);
-    const loopStartBeat = loopPreview?.startBeat ?? frame.loopStartBeat;
-    const loopBeats = loopPreview?.bars ? loopPreview.bars * 4 : frame.loopBeats;
-    const showLoop = loopPreview !== null || frame.looping;
-    if (showLoop) endBeat = Math.max(endBeat, loopStartBeat + loopBeats);
+    const showRange = loopPreview !== null || frame.looping || frame.rangeCustom;
+    const loopStartBeat = loopPreview?.startBeat ?? (showRange ? frame.loopStartBeat : 0);
+    const loopBeats = loopPreview
+      ? Math.max(0, loopPreview.endBeat - loopPreview.startBeat)
+      : showRange
+        ? frame.loopBeats
+        : 0;
+    if (showRange) endBeat = Math.max(endBeat, loopStartBeat + loopBeats);
     arrangeBeats = Math.max(16, Math.ceil(endBeat / 4) * 4);
+    const rangeBusy = rangeEditing || rulerActive || document.activeElement === rangeFrom || document.activeElement === rangeTo;
+    if (!rangeBusy && !frame.rangeCustom && !frame.looping && loopPreview === null) {
+      rangeFrom.max = String(arrangeBeats);
+      rangeTo.max = String(arrangeBeats);
+      if (rangeFrom.value !== '0') rangeFrom.value = '0';
+      if (Number(rangeTo.value) !== arrangeBeats) rangeTo.value = String(arrangeBeats);
+      paintRangeReadout();
+    } else if (!rangeBusy) {
+      const max = Math.max(arrangeBeats, loopStartBeat + loopBeats);
+      rangeFrom.max = String(max);
+      rangeTo.max = String(max);
+    }
     const playhead = frame.playing || frame.recording ? (frame.position * frame.bpm) / 60 : -1;
-    drawRuler(rulerCanvas, arrangeBeats, showLoop ? loopStartBeat : 0, showLoop ? loopBeats : 0, playhead);
+    const strongRange = frame.looping || loopPreview !== null;
+    drawRuler(rulerCanvas, arrangeBeats, loopStartBeat, loopBeats, playhead, strongRange);
     tracks.forEach((track, index) => {
       const duration = frame.durations[index] ?? 0;
       const span = spans[index] ?? { startBeat: 0, lengthBeats: 0 };
@@ -961,10 +1076,11 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
         dragBeats.get(index) ?? span.startBeat,
         span.lengthBeats,
         arrangeBeats,
-        showLoop ? loopStartBeat : 0,
-        showLoop ? loopBeats : 0,
+        loopStartBeat,
+        loopBeats,
         playhead,
         TRACK_COLORS[index] ?? '#e0a106',
+        strongRange,
       );
     });
   }
@@ -1194,6 +1310,7 @@ function drawRuler(
   loopStart: number,
   loopBeats: number,
   playhead: number,
+  strong = false,
 ): void {
   const size = resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
@@ -1204,7 +1321,7 @@ function drawRuler(
   if (loopBeats > 0) {
     const x = (loopStart / viewBeats) * size.width;
     const w = (loopBeats / viewBeats) * size.width;
-    ctx.fillStyle = 'rgba(224, 161, 6, 0.28)';
+    ctx.fillStyle = strong ? 'rgba(224, 161, 6, 0.38)' : 'rgba(224, 161, 6, 0.2)';
     ctx.fillRect(x, 0, w, size.height);
   }
   ctx.font = `${Math.max(10, Math.floor(size.height * 0.42))}px ui-monospace, monospace`;
@@ -1232,6 +1349,7 @@ function drawLane(
   loopBeats: number,
   playhead: number,
   color: string,
+  strong = false,
 ): void {
   const size = resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
@@ -1242,7 +1360,7 @@ function drawLane(
   if (loopBeats > 0) {
     const x = (loopStart / viewBeats) * size.width;
     const w = (loopBeats / viewBeats) * size.width;
-    ctx.fillStyle = 'rgba(224, 161, 6, 0.12)';
+    ctx.fillStyle = strong ? 'rgba(224, 161, 6, 0.2)' : 'rgba(224, 161, 6, 0.1)';
     ctx.fillRect(x, 0, w, size.height);
   }
   const beats = Math.ceil(viewBeats);
@@ -1292,20 +1410,27 @@ function snapBeat(beat: number, fine: boolean): number {
   return Math.max(0, Math.min(256, steps * grid));
 }
 
-function loopFromDrag(anchor: number, current: number): { startBeat: number; bars: number } {
-  const startBeat = Math.max(0, Math.floor(Math.min(anchor, current) / 4) * 4);
-  const endBeat = Math.max(startBeat + 4, Math.ceil((Math.max(anchor, current) + 0.001) / 4) * 4);
-  const rawBars = Math.max(1, Math.round((endBeat - startBeat) / 4));
-  let bars = 1;
-  let best = Infinity;
-  for (const choice of [1, 2, 4, 8]) {
-    const distance = Math.abs(choice - rawBars);
-    if (distance < best) {
-      best = distance;
-      bars = choice;
-    }
-  }
-  return { startBeat, bars };
+function rangeFromDrag(anchor: number, current: number, fine: boolean): { startBeat: number; endBeat: number } {
+  const startBeat = snapBeat(Math.min(anchor, current), fine);
+  let endBeat = snapBeat(Math.max(anchor, current), fine);
+  if (endBeat < startBeat + 1) endBeat = startBeat + 1;
+  return { startBeat, endBeat: Math.min(256, endBeat) };
+}
+
+function attachCollapse(host: HTMLElement, head: HTMLElement, label: string): void {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'btn tiny zone-toggle';
+  toggle.textContent = 'Hide';
+  toggle.setAttribute('aria-expanded', 'true');
+  toggle.setAttribute('aria-label', `Collapse ${label}`);
+  toggle.addEventListener('click', () => {
+    const collapsed = host.classList.toggle('is-collapsed');
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.textContent = collapsed ? 'Show' : 'Hide';
+    toggle.setAttribute('aria-label', `${collapsed ? 'Expand' : 'Collapse'} ${label}`);
+  });
+  head.append(toggle);
 }
 
 function insertChip(label: string, active: boolean): HTMLElement {

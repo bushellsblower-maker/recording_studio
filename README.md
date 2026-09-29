@@ -19,7 +19,7 @@ Track 1 starts armed. The tone generator is the default input, and a CC0 session
 
 1. Press **Power**.
 2. In **Browser** (the Sounds tab on a phone), search or filter, tap a sound to preview it, then **Place** on the highlighted track or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loop tempos set the click to match.
-3. Press **Play**. The playhead runs on the bar grid. Drag a clip to move it, or drag the ruler to set the loop. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded. The transport shows **4/4**.
+3. Press **Play**. The playhead runs on the bar grid. Drag a clip to move it. The arrangement **Play** range sets where playback starts and stops. **Loop region** repeats that span, and **Loop selection** repeats the highlighted clip. Dragging the bar ruler sets the same range. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded. The transport shows **4/4**.
 4. Press **Record**, then **Stop**, to print the armed tracks. Audio 1–4 print the channel. Inst 5–8 print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
 
@@ -32,11 +32,11 @@ The on-screen keys (or A–K on the computer keyboard) play a simple synth throu
 3. Leave **Monitor** down unless you are wearing headphones.
 4. Arm a track and press **Record**. Tracks that are not armed play back underneath the new take.
 
-Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **LOOP** repeats a bar region (1, 2, 4, or 8 bars) and, when recording, ends the take at the end of that region. The channel strip shows the insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
+Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **Loop region** repeats the play-from / play-to span, and recording stops at the end of that span. **All** clears the range so playback uses the whole arrangement. The channel strip shows the insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
 
 ### Desk layout
 
-From about 900px up, the desk is one surface. Transport stays across the top. The browser is a full-height column on the left. The arrangement fills the center, with the master beside the lanes. The console sits under the arrangement as five modules side by side (Input, Channel, EQ, Dynamics, FX), scrolling inside that band when the window is short. Pads and keys are a slim strip along the bottom. Narrower desktop windows keep that same arrangement; the console band scrolls sideways instead of turning into a phone stack.
+From about 900px up, the desk is one surface. The banner and transport stay compact across the top. The browser is a column on the left. Arrangement, console, and pads stack on the right, expanded so the lanes and the five console modules (Input, Channel, EQ, Dynamics, FX) fit without an inner horizontal scrollbar. If the desk is taller than the window, the page scrolls once. Each of those zones has Hide / Show so it can collapse. Pads and keys stay a short strip under the console. The layout does not turn into the phone stack between 900px and a wide monitor.
 
 Below 900px the phone layout docks the transport and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the inserts and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
 

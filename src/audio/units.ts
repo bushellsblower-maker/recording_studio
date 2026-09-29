@@ -71,6 +71,17 @@ export function formatBarBeat(bar: number, beat: number): string {
   return `${String(safeBar).padStart(3, '0')}.${safeBeat}`;
 }
 
+/** Compact bar.beat (and 16th) from a beat offset in 4/4. Beat 0 is bar 1, beat 1. */
+export function formatBeatPosition(beat: number): string {
+  const safe = Number.isFinite(beat) ? Math.max(0, beat) : 0;
+  const bar = Math.floor(safe / 4) + 1;
+  const into = safe - (bar - 1) * 4;
+  const beatNo = Math.floor(into) + 1;
+  const ticks = Math.round((into - Math.floor(into)) * 4);
+  if (ticks > 0 && ticks < 4) return `${bar}.${beatNo}.${ticks}`;
+  return `${bar}.${beatNo}`;
+}
+
 /** 1-based bar and beat in 4/4 from a musical time in seconds. */
 export function musicalPosition(seconds: number, bpm: number): { bar: number; beat: number } {
   const secondsPerBeat = 60 / Math.max(1, bpm);
