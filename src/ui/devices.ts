@@ -378,6 +378,10 @@ export function buildDevices(handlers: DeviceHandlers): DevicePanel {
     const active = frame.reductions.reduce((max, value) => Math.max(max, value), 0);
     gr.textContent = active < 0.05 ? 'GR 0' : `GR ${active.toFixed(1)} dB`;
     drawCurve(curve, frame.eq);
+    const row = last?.tracks[trackIndex];
+    if (!row) return;
+    const scale = laneScale(laneName(), row);
+    drawAuto(autoCanvas, pointsFor(row, laneName()), scale.min, scale.max);
   }
 
   return { element, render, paint };
@@ -466,12 +470,20 @@ function laneScale(
   return spec ? { min: spec.min, max: spec.max } : { min: 0, max: 1 };
 }
 
-function drawAuto(canvas: HTMLCanvasElement, points: readonly AutoPoint[], min: number, max: number): void {
+function canvasBox(canvas: HTMLCanvasElement, fallbackHeight: number): { width: number; height: number } {
   const rect = canvas.getBoundingClientRect();
-  const width = Math.max(2, Math.floor(rect.width || 240));
-  const height = 64;
-  canvas.width = width;
-  canvas.height = height;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(2, Math.floor((rect.width || 240) * dpr));
+  const height = Math.max(2, Math.floor((rect.height || fallbackHeight) * dpr));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  return { width, height };
+}
+
+function drawAuto(canvas: HTMLCanvasElement, points: readonly AutoPoint[], min: number, max: number): void {
+  const { width, height } = canvasBox(canvas, 64);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   ctx.fillStyle = '#10141a';
@@ -503,10 +515,9 @@ function drawAuto(canvas: HTMLCanvasElement, points: readonly AutoPoint[], min: 
 }
 
 function drawCurve(canvas: HTMLCanvasElement, eq: readonly number[] | null): void {
+  const { width, height } = canvasBox(canvas, 72);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const width = canvas.width;
-  const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = '#10141a';
   ctx.fillRect(0, 0, width, height);
