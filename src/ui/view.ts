@@ -211,9 +211,26 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   sig.textContent = '4/4';
   sig.title = 'Time signature';
   const clockWrap = document.createElement('div');
-  clockWrap.className = 'clock-wrap';
+  clockWrap.className = 'clock-wrap tool-group';
   clockWrap.append(clockLabel, clock, bars, sig);
-  top.append(brand, pills, clockWrap, power);
+  const headLFill = document.createElement('div');
+  headLFill.className = 'mini-meter-fill';
+  const headRFill = document.createElement('div');
+  headRFill.className = 'mini-meter-fill';
+  const headL = document.createElement('div');
+  headL.className = 'head-meter';
+  headL.append(headLFill);
+  const headR = document.createElement('div');
+  headR.className = 'head-meter';
+  headR.append(headRFill);
+  const headMeters = document.createElement('div');
+  headMeters.className = 'head-meters';
+  headMeters.title = 'Master peak, left and right';
+  headMeters.append(headL, headR);
+  const brandGroup = document.createElement('div');
+  brandGroup.className = 'tool-group';
+  brandGroup.append(brand, pills);
+  top.append(brandGroup, clockWrap, headMeters, power);
 
   const rec = button('REC', 'btn rec');
   const stop = button('STOP', 'btn stop');
@@ -248,10 +265,17 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const transport = document.createElement('section');
   transport.className = 'transport panel';
   const transportButtons = document.createElement('div');
-  transportButtons.className = 'transport-buttons';
+  transportButtons.className = 'transport-buttons transport-main tool-group';
   transportButtons.append(rec, stop, play, undo, redo, reset);
   const metroBox = document.createElement('div');
-  metroBox.className = 'metro';
+  metroBox.className = 'metro tool-group';
+  let snapSixteenth = false;
+  let laneZoom = 1;
+  let viewOrigin = 0;
+  let viewSpan = 16;
+  function gridFine(shift: boolean): boolean {
+    return shift !== snapSixteenth;
+  }
   const tap = button('TAP', 'btn small');
   tap.title = 'Tap tempo';
   tap.addEventListener('click', handlers.tap);
@@ -285,11 +309,54 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
   const midiBtn = button('MIDI', 'btn small');
   midiBtn.title = 'Listen to a Web MIDI keyboard';
   midiBtn.addEventListener('click', handlers.enableMidi);
-  const workflow = document.createElement('div');
-  workflow.className = 'transport-buttons';
-  workflow.append(tap, countIn, punch, mark, saveProject, loadProject, bounce, stems, midiBtn);
-  metroBox.append(metro, quantize, bpm.root, metroLevel.root);
-  transport.append(transportButtons, metroBox, workflow);
+  const snap = button('SNAP 1', 'btn small');
+  snap.title = 'Snap grid. SNAP 1 is beats, SNAP 16 is sixteenths. Shift flips the grid while dragging.';
+  snap.setAttribute('aria-pressed', 'true');
+  snap.addEventListener('click', () => {
+    snapSixteenth = !snapSixteenth;
+    snap.textContent = snapSixteenth ? 'SNAP 16' : 'SNAP 1';
+    snap.classList.toggle('on', snapSixteenth);
+  });
+  const zoomOut = button('−', 'btn tiny');
+  zoomOut.title = 'Zoom out to show more bars';
+  zoomOut.setAttribute('aria-label', 'Zoom out');
+  const zoomRead = document.createElement('span');
+  zoomRead.className = 'zoom-read';
+  zoomRead.textContent = '1×';
+  const zoomIn = button('+', 'btn tiny');
+  zoomIn.title = 'Zoom in for more detail';
+  zoomIn.setAttribute('aria-label', 'Zoom in');
+  const applyZoom = (next: number): void => {
+    laneZoom = Math.min(4, Math.max(1, next));
+    zoomRead.textContent = `${laneZoom}×`;
+    zoomIn.disabled = laneZoom >= 4;
+    zoomOut.disabled = laneZoom <= 1;
+  };
+  zoomIn.addEventListener('click', () => applyZoom(laneZoom * 2));
+  zoomOut.addEventListener('click', () => applyZoom(laneZoom / 2));
+  zoomOut.disabled = true;
+  const loopTransport = button('LOOP', 'btn small');
+  loopTransport.title = 'Repeat the play range';
+  loopTransport.addEventListener('click', () => {
+    if (!last) return;
+    const next = !last.loopOn;
+    if (next && !last.rangeCustom) {
+      handlers.playRange(0, Math.max(1, arrangeBeats), true);
+      return;
+    }
+    handlers.loop(next);
+  });
+  const modes = document.createElement('div');
+  modes.className = 'transport-buttons tool-group';
+  modes.append(loopTransport, countIn, punch, snap, mark);
+  const zoomBox = document.createElement('div');
+  zoomBox.className = 'tool-group zoom-box';
+  zoomBox.append(zoomOut, zoomRead, zoomIn);
+  const projectBox = document.createElement('div');
+  projectBox.className = 'transport-buttons tool-group';
+  projectBox.append(saveProject, loadProject, bounce, stems, midiBtn);
+  metroBox.append(metro, quantize, tap, bpm.root, metroLevel.root);
+  transport.append(transportButtons, modes, zoomBox, metroBox, projectBox);
 
   const micButton = button('Enable microphone', 'btn small wide');
   const voice = checkbox('Browser voice processing (echo / noise / AGC)', DEFAULTS.voiceProcessing);
@@ -532,14 +599,14 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     if (last?.mode === 'recording' || last?.mode === 'stopping') return;
     rulerCanvas.setPointerCapture(event.pointerId);
     rulerActive = true;
-    rulerFine = event.shiftKey;
+    rulerFine = gridFine(event.shiftKey);
     rulerAnchor = beatFromClient(rulerCanvas, event.clientX);
     loopPreview = rangeFromDrag(rulerAnchor, rulerAnchor, rulerFine);
     event.preventDefault();
   });
   rulerCanvas.addEventListener('pointermove', (event) => {
     if (!rulerActive) return;
-    rulerFine = event.shiftKey;
+    rulerFine = gridFine(event.shiftKey);
     loopPreview = rangeFromDrag(rulerAnchor, beatFromClient(rulerCanvas, event.clientX), rulerFine);
   });
   const finishRuler = (): void => {
@@ -693,7 +760,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       chooseTrack(index);
       const sampleId = event.dataTransfer?.getData('application/x-rs-sample');
       const dropped = event.dataTransfer?.files?.[0];
-      const beat = snapBeat(beatFromClient(canvas, event.clientX), event.shiftKey);
+      const beat = snapBeat(beatFromClient(canvas, event.clientX), gridFine(event.shiftKey));
       if (sampleId) handlers.trackDropSample(index, sampleId, beat);
       else if (dropped) handlers.trackImport(index, dropped, beat);
     });
@@ -706,7 +773,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       const end = origin + span.lengthBeats;
       if (beat < origin - 0.05 || beat > end + 0.05) return;
       const rect = canvas.getBoundingClientRect();
-      const edge = Math.max(0.2, (12 / Math.max(1, rect.width)) * arrangeBeats);
+      const edge = Math.max(0.2, (12 / Math.max(1, rect.width)) * viewSpan);
       let mode: 'move' | 'start' | 'end' | 'fade-in' | 'fade-out' = 'move';
       if (event.altKey) mode = beat < origin + span.lengthBeats * 0.5 ? 'fade-in' : 'fade-out';
       else if (beat <= origin + edge) mode = 'start';
@@ -718,12 +785,12 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     });
     canvas.addEventListener('pointermove', (event) => {
       if (!dragging || dragging.index !== index || !canvas.hasPointerCapture(event.pointerId)) return;
-      if (dragging.mode === 'move') dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, event.shiftKey));
+      if (dragging.mode === 'move') dragBeats.set(index, snapBeat(beatFromClient(canvas, event.clientX) - dragging.grab, gridFine(event.shiftKey)));
     });
     const finishDrag = (event: PointerEvent): void => {
       if (!dragging || dragging.index !== index) return;
       const mode = dragging.mode;
-      const beat = mode === 'move' ? (dragBeats.get(index) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), event.shiftKey);
+      const beat = mode === 'move' ? (dragBeats.get(index) ?? dragging.origin) : snapBeat(beatFromClient(canvas, event.clientX), gridFine(event.shiftKey));
       dragging = null;
       dragBeats.delete(index);
       if (mode === 'move') handlers.trackStart(index, beat);
@@ -743,9 +810,9 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
 
   function beatFromClient(canvas: HTMLCanvasElement, clientX: number): number {
     const rect = canvas.getBoundingClientRect();
-    if (rect.width < 2) return 0;
+    if (rect.width < 2) return viewOrigin;
     const frac = (clientX - rect.left) / rect.width;
-    return Math.max(0, Math.min(arrangeBeats, frac * arrangeBeats));
+    return Math.max(0, Math.min(256, viewOrigin + frac * viewSpan));
   }
 
   function chooseTrack(index: number): void {
@@ -1090,6 +1157,7 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     press(masterMute, snapshot.masterMute);
     press(metro, snapshot.metroOn);
     press(loopRegion, snapshot.loopOn);
+    press(loopTransport, snapshot.loopOn);
     press(rangeAll, !snapshot.loopOn && !snapshot.rangeCustom);
     const rangeBusy = rangeEditing || rulerActive || document.activeElement === rangeFrom || document.activeElement === rangeTo;
     if (!rangeBusy) {
@@ -1162,6 +1230,8 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     rHold = frame.masterPeakR > rHold ? frame.masterPeakR : rHold * 0.9;
     if (frame.masterPeakL >= 0.98 || frame.masterPeakR >= 0.98) masterClipUntil = performance.now() + 1200;
     paintMeter(masterMeter, [lSmooth, rSmooth], [lHold, rHold], performance.now() < masterClipUntil);
+    headLFill.style.height = `${meterPercent(lSmooth)}%`;
+    headRFill.style.height = `${meterPercent(rSmooth)}%`;
 
     const reduction = Math.abs(frame.reduction);
     gr.fill.style.width = `${Math.min(100, (reduction / 24) * 100)}%`;
@@ -1193,7 +1263,23 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
     }
     const playhead = frame.playing || frame.recording ? (frame.position * frame.bpm) / 60 : -1;
     const strongRange = frame.looping || loopPreview !== null;
-    drawRuler(rulerCanvas, arrangeBeats, loopStartBeat, loopBeats, playhead, strongRange, last?.markers ?? []);
+    viewSpan = Math.max(4, arrangeBeats / laneZoom);
+    const focus = playhead >= 0 ? playhead : (last?.cueBeat ?? viewOrigin);
+    if (focus < viewOrigin || focus > viewOrigin + viewSpan - 0.25) {
+      viewOrigin = Math.max(0, Math.min(Math.max(0, arrangeBeats - viewSpan), focus - viewSpan * 0.2));
+    }
+    if (viewOrigin + viewSpan > arrangeBeats) viewOrigin = Math.max(0, arrangeBeats - viewSpan);
+    const origin = viewOrigin;
+    const markers = (last?.markers ?? []).map((marker) => ({ beat: marker.beat - origin, name: marker.name }));
+    drawRuler(
+      rulerCanvas,
+      viewSpan,
+      loopStartBeat - origin,
+      loopBeats,
+      playhead < 0 ? -1 : playhead - origin,
+      strongRange,
+      markers,
+    );
     devices.paint({ reductions: frame.reductions, eq: frame.eq ? [...frame.eq] : null });
     tracks.forEach((track, index) => {
       const duration = frame.durations[index] ?? 0;
@@ -1207,17 +1293,17 @@ export function buildView(handlers: ConsoleHandlers): ConsoleView {
       drawLane(
         track.canvas,
         frame.peaks[index] ?? [],
-        dragBeats.get(index) ?? span.startBeat,
+        (dragBeats.get(index) ?? span.startBeat) - origin,
         span.lengthBeats,
-        arrangeBeats,
-        loopStartBeat,
+        viewSpan,
+        loopStartBeat - origin,
         loopBeats,
-        playhead,
+        playhead < 0 ? -1 : playhead - origin,
         TRACK_COLORS[index] ?? '#e0a106',
         strongRange,
         fades?.fadeInBeats ?? 0,
         fades?.fadeOutBeats ?? 0,
-        fades?.volumeAuto ?? [],
+        (fades?.volumeAuto ?? []).map((point) => ({ beat: point.beat - origin, value: point.value })),
       );
     });
   }
