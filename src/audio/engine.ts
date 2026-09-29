@@ -1,5 +1,5 @@
 import { DEFAULTS, RANGES } from '../defaults';
-import type { EngineSnapshot, InputMode, Levels, MicState, ToneShape, TransportMode } from '../types';
+import type { EngineSnapshot, InputMode, Levels, MicState, ToneShape, TrackKind, TransportMode } from '../types';
 import { TRACK_COUNT } from '../types';
 import { makeImpulse, makeNoiseBuffer } from './impulse';
 import { readMeter, readReduction } from './meters';
@@ -56,6 +56,8 @@ interface Track {
   gainDb: number;
   pan: number;
   name: string;
+  kind: TrackKind;
+  startBeat: number;
   clipBpm: number | null;
   buffer: AudioBuffer | null;
   peaks: number[];
@@ -75,6 +77,7 @@ interface ClipMemory {
   peaks: number[];
   name: string;
   clipBpm: number | null;
+  startBeat: number;
 }
 
 interface PlayingSource {
@@ -101,11 +104,11 @@ const SILENT_LEVELS: Levels = {
  *
  * source -> preamp -> meter -> HPF -> polarity -> EQ -> gate -> compressor
  *        -> makeup -> channel fader -> pan
- *            |-> record tap (printed to armed tracks; ignores monitor)
+ *            |-> record tap (printed to armed audio tracks; ignores monitor)
  *            |-> monitor -> mute/solo -> master, delay send, reverb send
  * playback tracks -> master
  * metronome -> master (cue only, not recorded)
- * sample pads and keys -> master, and into the record tap while a take is running
+ * sample pads and keys -> master, and into armed instrument tracks while recording
  * master fader -> safety limiter -> mute -> speakers
  */
 export class StudioEngine {
@@ -120,6 +123,7 @@ export class StudioEngine {
   private micSource: MediaStreamAudioSourceNode | null = null;
   private gateNode: AudioWorkletNode | null = null;
   private recorder: AudioWorkletNode | null = null;
+  private perfRecorder: AudioWorkletNode | null = null;
   private sources: PlayingSource[] = [];
   private voices: AudioBufferSourceNode[] = [];
   private previewNode: AudioBufferSourceNode | null = null;
@@ -195,6 +199,10 @@ export class StudioEngine {
   private beatOrigin = 0;
   private loopStartSec = 0;
   private loopLengthSec = 0;
+  private endsGot = 0;
+  private pendingEnds = 0;
+  private captureClosed = false;
+  private scheduledPass = 1;
 
   constructor(listener: StudioListener) {
     this.listener = listener;
@@ -205,6 +213,8 @@ export class StudioEngine {
       gainDb: 0,
       pan: 0,
       name: '',
+      kind: index < 4 ? 'audio' : 'instrument',
+      startBeat: 0,
       clipBpm: null,
       buffer: null,
       peaks: [],
@@ -254,6 +264,8 @@ export class StudioEngine {
         hasAudio: track.buffer !== null,
         duration: this.trackDuration(track),
         name: track.name,
+        kind: track.kind,
+        startBeat: track.startBeat,
       })),
       contextState: this.ctx?.state ?? 'unpowered',
       inputMute: this.inputMute,
@@ -305,14 +317,72 @@ export class StudioEngine {
     });
   }
 
+  setTrackKind(index: number, kind: TrackKind): void {
+    const track = this.tracks[index];
+    if (!track || track.kind === kind) return;
+    if (this.mode === 'recording' || this.mode === 'stopping') {
+      this.status('Stop recording before changing the track type.');
+      return;
+    }
+    track.kind = kind;
+    this.status(`Track ${index + 1} prints ${kind === 'instrument' ? 'pads and keys' : 'the channel'}.`);
+    this.listener.onChange();
+  }
+
+  setTrackStartBeat(index: number, beat: number): void {
+    const track = this.tracks[index];
+    if (!track) return;
+    if (this.mode === 'recording' || this.mode === 'stopping') {
+      this.status('Stop recording before moving a clip.');
+      return;
+    }
+    const next = Math.max(0, Math.min(256, beat));
+    if (track.startBeat === next) return;
+    track.startBeat = next;
+    if (this.mode === 'playing') this.play();
+    else this.listener.onChange();
+  }
+
+  setLoopRegion(startBar: number, bars: number): void {
+    this.loopOn = true;
+    this.loopStartBar = Math.min(64, Math.max(1, Math.round(startBar)));
+    this.loopBars = bars === 1 || bars === 2 || bars === 4 || bars === 8 ? bars : 2;
+    if (this.mode === 'playing') this.play();
+    else this.listener.onChange();
+  }
+
   sessionLength(): number {
     let longest = 0;
-    for (const track of this.tracks) longest = Math.max(longest, this.trackDuration(track));
+    for (const track of this.tracks) longest = Math.max(longest, this.clipWallStart(track) + this.clipWallLength(track));
     return longest;
   }
 
   durations(): number[] {
-    return this.tracks.map((track) => this.trackDuration(track));
+    return this.tracks.map((track) => this.clipWallLength(track));
+  }
+
+  bpm(): number {
+    return this.metroBpm;
+  }
+
+  loopStartBeat(): number {
+    return this.loopOn ? (this.loopStartBar - 1) * 4 : 0;
+  }
+
+  loopLengthBeats(): number {
+    return this.loopOn ? this.loopBars * 4 : 0;
+  }
+
+  isLooping(): boolean {
+    return this.loopOn;
+  }
+
+  clipSpans(): { startBeat: number; lengthBeats: number }[] {
+    const secondsPerBeat = 60 / Math.max(1, this.metroBpm);
+    return this.tracks.map((track) => ({
+      startBeat: track.startBeat,
+      lengthBeats: this.clipWallLength(track) / secondsPerBeat,
+    }));
   }
 
   peaks(): readonly (readonly number[])[] {
@@ -339,7 +409,17 @@ export class StudioEngine {
       }
       return;
     }
-    if (this.mode !== 'playing' || this.loopOn || !Number.isFinite(this.playDuration)) return;
+    if (this.mode !== 'playing') return;
+    if (this.loopOn && this.loopLengthSec > 0) {
+      const elapsed = this.ctx.currentTime - this.rollStart;
+      let guard = 0;
+      while (elapsed + 0.06 >= this.scheduledPass * this.loopLengthSec && guard < 8) {
+        this.handoff(this.rollStart + this.scheduledPass * this.loopLengthSec);
+        guard += 1;
+      }
+      return;
+    }
+    if (!Number.isFinite(this.playDuration)) return;
     if (this.ctx.currentTime < this.rollStart + this.playDuration) return;
     this.metro?.stop();
     this.stopSources();
@@ -744,6 +824,7 @@ export class StudioEngine {
       track.peaks = clip.peaks;
       track.name = clip.name;
       track.clipBpm = clip.clipBpm;
+      track.startBeat = clip.startBeat;
       track.pending = false;
       track.chunksL = [];
       track.chunksR = [];
@@ -753,7 +834,7 @@ export class StudioEngine {
     this.listener.onChange();
   }
 
-  loadClip(index: number, buffer: AudioBuffer, info: { name: string; bpm: number | null }): boolean {
+  loadClip(index: number, buffer: AudioBuffer, info: { name: string; bpm: number | null; startBeat?: number }): boolean {
     const track = this.tracks[index];
     if (!track) return false;
     if (!this.ensureOnline()) return false;
@@ -766,23 +847,25 @@ export class StudioEngine {
     track.peaks = computePeaks(buffer);
     track.name = info.name;
     track.clipBpm = info.bpm;
+    if (info.startBeat !== undefined) track.startBeat = Math.max(0, Math.min(256, info.startBeat));
     track.pending = false;
     track.chunksL = [];
     track.chunksR = [];
     track.samples = 0;
     if (this.mode === 'playing') this.play();
     const tempo = info.bpm ? ` It follows the ${Math.round(info.bpm)} BPM click.` : '';
-    this.status(`Loaded ${info.name} on track ${index + 1}.${tempo}`);
+    const placed = track.startBeat > 0 ? ` It starts at beat ${formatBeat(track.startBeat)}.` : '';
+    this.status(`Loaded ${info.name} on track ${index + 1}.${placed}${tempo}`);
     this.listener.onChange();
     return true;
   }
 
-  async importEncoded(index: number, data: ArrayBuffer, filename: string): Promise<void> {
+  async importEncoded(index: number, data: ArrayBuffer, filename: string, startBeat?: number): Promise<void> {
     if (!this.ensureOnline() || !this.ctx) return;
     try {
       const audio = await this.ctx.decodeAudioData(data.slice(0));
       const name = filename.replace(/\.[^.]+$/, '') || filename;
-      this.loadClip(index, audio, { name, bpm: null });
+      this.loadClip(index, audio, { name, bpm: null, startBeat });
     } catch {
       this.status('Could not decode that file. Use WAV or MP3.');
     }
@@ -860,6 +943,7 @@ export class StudioEngine {
     }
     this.stash();
     this.prepareLoopWindow();
+    const origin = this.loopOn ? (this.loopStartBar - 1) * 4 : 0;
     for (const track of this.tracks) {
       if (!track.armed) continue;
       track.pending = true;
@@ -867,6 +951,7 @@ export class StudioEngine {
       track.peaks = [];
       track.name = '';
       track.clipBpm = null;
+      track.startBeat = origin;
       track.chunksL = [];
       track.chunksR = [];
       track.samples = 0;
@@ -889,11 +974,14 @@ export class StudioEngine {
     }
     const playing = this.tracks.filter((track) => !track.armed && track.buffer).length;
     const noun = armed.length === 1 ? 'track' : 'tracks';
+    const audioArmed = armed.some((track) => track.kind === 'audio');
+    const instrumentArmed = armed.some((track) => track.kind === 'instrument');
     let message = playing
       ? `Recording ${armed.length} armed ${noun} over ${playing} playing back.`
       : `Recording ${armed.length} armed ${noun}.`;
     if (this.loopOn) message += ` The take stops after ${this.loopBars} bar${this.loopBars === 1 ? '' : 's'}.`;
-    if (!this.inputLooksActive()) {
+    if (instrumentArmed) message += ' Instrument tracks print pads and keys.';
+    if (audioArmed && !this.inputLooksActive()) {
       message += ' Input looks silent — enable the mic or raise the tone level.';
     }
     this.status(message);
@@ -968,6 +1056,7 @@ export class StudioEngine {
     this.acceptChunks = false;
     this.scriptRecording = false;
     if (wasCapturing && this.recorder) this.recorder.port.postMessage({ type: 'stop', id });
+    if (wasCapturing && this.perfRecorder) this.perfRecorder.port.postMessage({ type: 'stop', id });
     if (!wasCapturing) this.stash();
     this.stopVoices();
     this.clearTracks();
@@ -986,21 +1075,19 @@ export class StudioEngine {
 
   mixWav(): { blob: Blob; silent: boolean; scaled: boolean } | null {
     const anySolo = this.tracks.some((track) => track.solo);
+    const audible = this.tracks.filter((track) => track.buffer && !track.muted && (!anySolo || track.solo));
+    const rate = audible[0]?.buffer?.sampleRate ?? this.sampleRate();
     const parts: { left: Float32Array; right: Float32Array; gainL: number; gainR: number }[] = [];
-    for (const track of this.tracks) {
-      if (!track.buffer) continue;
-      const audible = !track.muted && (!anySolo || track.solo);
-      if (!audible) continue;
-      const left = track.buffer.getChannelData(0);
-      const right = track.buffer.numberOfChannels > 1 ? track.buffer.getChannelData(1) : left;
+    for (const track of audible) {
+      const rendered = this.renderArranged(track, rate);
+      if (!rendered) continue;
       const level = dbToGain(track.gainDb) * dbToGain(this.masterDb);
       const gainL = level * (track.pan <= 0 ? 1 : 1 - track.pan);
       const gainR = level * (track.pan >= 0 ? 1 : 1 + track.pan);
-      parts.push({ left, right, gainL, gainR });
+      parts.push({ left: rendered.left, right: rendered.right, gainL, gainR });
     }
     if (parts.length === 0) return null;
     const mixed = sumStereo(parts);
-    const rate = parts[0] ? this.tracks.find((track) => track.buffer)?.buffer?.sampleRate ?? this.sampleRate() : this.sampleRate();
     return {
       blob: encodeStereoWav(mixed.left, mixed.right, rate),
       silent: mixed.peak < 0.0001,
@@ -1106,7 +1193,6 @@ export class StudioEngine {
     stereo(performance);
     performance.gain.value = 0.85;
     performance.connect(masterSum);
-    performance.connect(recordTap);
     const preview = ctx.createGain();
     stereo(preview);
     preview.gain.value = 0.85;
@@ -1272,6 +1358,14 @@ export class StudioEngine {
     const ctx = this.ctx;
     const graph = this.g;
     if (!ctx || !graph) return;
+    this.recorder = this.makeRecorder(graph.recordTap, 'audio');
+    this.perfRecorder = this.makeRecorder(graph.performance, 'instrument');
+    this.recorderReady = true;
+  }
+
+  private makeRecorder(source: AudioNode, bus: 'audio' | 'instrument'): AudioWorkletNode {
+    const ctx = this.ctx;
+    if (!ctx) throw new Error('Audio context is not running.');
     const node = new AudioWorkletNode(ctx, 'studio-recorder', {
       numberOfInputs: 1,
       numberOfOutputs: 1,
@@ -1287,18 +1381,17 @@ export class StudioEngine {
       if (typeof message.id !== 'number' || message.id !== this.captureEpoch) return;
       if (message.type === 'chunk' && message.left instanceof Float32Array && message.right instanceof Float32Array) {
         if (!this.acceptChunks) return;
-        this.append(message.left, message.right);
+        this.append(message.left, message.right, bus);
         return;
       }
       if (message.type === 'end') this.onCaptureEnded(message.id);
     };
     const sink = ctx.createGain();
     sink.gain.value = 0;
-    graph.recordTap.connect(node);
+    source.connect(node);
     node.connect(sink);
     sink.connect(ctx.destination);
-    this.recorder = node;
-    this.recorderReady = true;
+    return node;
   }
 
   private installScriptRecorder(): void {
@@ -1310,27 +1403,31 @@ export class StudioEngine {
       this.recorderReady = false;
       return;
     }
-    const proc = factory.call(ctx, 2048, 2, 2) as ScriptProc;
-    proc.onaudioprocess = (event) => {
-      if (this.scriptEpoch !== this.captureEpoch) return;
-      if (!this.scriptRecording || !this.acceptChunks || !this.ctx) return;
-      const input = event.inputBuffer;
-      const block = input.duration;
-      if (event.playbackTime + block <= this.captureNotBefore) return;
-      let offset = 0;
-      if (event.playbackTime < this.captureNotBefore) {
-        offset = Math.floor((this.captureNotBefore - event.playbackTime) * this.ctx.sampleRate);
-      }
-      const leftSrc = input.getChannelData(0);
-      const rightSrc = input.numberOfChannels > 1 ? input.getChannelData(1) : leftSrc;
-      if (offset >= leftSrc.length) return;
-      this.append(new Float32Array(leftSrc.subarray(offset)), new Float32Array(rightSrc.subarray(offset)));
+    const attach = (source: AudioNode, bus: 'audio' | 'instrument'): void => {
+      const proc = factory.call(ctx, 2048, 2, 2) as ScriptProc;
+      proc.onaudioprocess = (event) => {
+        if (this.scriptEpoch !== this.captureEpoch) return;
+        if (!this.scriptRecording || !this.acceptChunks || !this.ctx) return;
+        const input = event.inputBuffer;
+        const block = input.duration;
+        if (event.playbackTime + block <= this.captureNotBefore) return;
+        let offset = 0;
+        if (event.playbackTime < this.captureNotBefore) {
+          offset = Math.floor((this.captureNotBefore - event.playbackTime) * this.ctx.sampleRate);
+        }
+        const leftSrc = input.getChannelData(0);
+        const rightSrc = input.numberOfChannels > 1 ? input.getChannelData(1) : leftSrc;
+        if (offset >= leftSrc.length) return;
+        this.append(new Float32Array(leftSrc.subarray(offset)), new Float32Array(rightSrc.subarray(offset)), bus);
+      };
+      const sink = ctx.createGain();
+      sink.gain.value = 0;
+      source.connect(proc);
+      proc.connect(sink);
+      sink.connect(ctx.destination);
     };
-    const sink = ctx.createGain();
-    sink.gain.value = 0;
-    graph.recordTap.connect(proc);
-    proc.connect(sink);
-    sink.connect(ctx.destination);
+    attach(graph.recordTap, 'audio');
+    attach(graph.performance, 'instrument');
     this.usingWorklet = false;
     this.recorderReady = true;
   }
@@ -1461,17 +1558,30 @@ export class StudioEngine {
   }
 
   private startCapture(time: number, id: number): void {
-    if (this.recorder) {
-      this.recorder.port.postMessage({ type: 'start', time, id });
+    this.endsGot = 0;
+    this.captureClosed = false;
+    if (this.recorder || this.perfRecorder) {
+      let ends = 0;
+      if (this.recorder) {
+        this.recorder.port.postMessage({ type: 'start', time, id });
+        ends += 1;
+      }
+      if (this.perfRecorder) {
+        this.perfRecorder.port.postMessage({ type: 'start', time, id });
+        ends += 1;
+      }
+      this.pendingEnds = Math.max(1, ends);
       return;
     }
     this.scriptEpoch = id;
     this.scriptRecording = true;
+    this.pendingEnds = 1;
   }
 
   private stopCapture(id: number): void {
-    if (this.recorder) {
-      this.recorder.port.postMessage({ type: 'stop', id });
+    if (this.recorder || this.perfRecorder) {
+      if (this.recorder) this.recorder.port.postMessage({ type: 'stop', id });
+      if (this.perfRecorder) this.perfRecorder.port.postMessage({ type: 'stop', id });
       return;
     }
     this.scriptRecording = false;
@@ -1480,6 +1590,10 @@ export class StudioEngine {
 
   private onCaptureEnded(id: number): void {
     if (id !== this.captureEpoch) return;
+    this.endsGot += 1;
+    if (this.endsGot < this.pendingEnds) return;
+    if (this.captureClosed) return;
+    this.captureClosed = true;
     const commit = this.commitOnEnd;
     this.acceptChunks = false;
     this.commitOnEnd = false;
@@ -1490,10 +1604,12 @@ export class StudioEngine {
     this.listener.onChange();
   }
 
-  private append(left: Float32Array, right: Float32Array): void {
+  private append(left: Float32Array, right: Float32Array, bus: 'audio' | 'instrument'): void {
     if (!this.acceptChunks) return;
     for (const track of this.tracks) {
       if (!track.pending) continue;
+      if (track.kind === 'instrument' && bus !== 'instrument') continue;
+      if (track.kind === 'audio' && bus !== 'audio') continue;
       track.chunksL.push(left);
       track.chunksR.push(right);
       track.samples += left.length;
@@ -1568,6 +1684,7 @@ export class StudioEngine {
       track.peaks = [];
       track.name = '';
       track.clipBpm = null;
+      track.startBeat = 0;
       track.chunksL = [];
       track.chunksR = [];
       track.samples = 0;
@@ -1579,46 +1696,63 @@ export class StudioEngine {
     this.stopSources();
     this.rollStart = when;
     this.beatOrigin = when - this.loopStartSec;
+    this.scheduledPass = 1;
+    this.spawnPass(when, this.loopOn ? this.loopStartSec : 0, skipArmed);
+  }
+
+  private spawnPass(passWhen: number, regionStart: number, skipArmed: boolean): void {
     if (!this.ctx) return;
+    const regionEnd = this.loopOn ? regionStart + this.loopLengthSec : Number.POSITIVE_INFINITY;
     for (const track of this.tracks) {
-      if (!track.buffer || !track.input) continue;
+      const buffer = track.buffer;
+      if (!buffer || !track.input) continue;
       if (skipArmed && track.armed) continue;
+      const clipStart = this.clipWallStart(track);
+      const clipEnd = clipStart + this.clipWallLength(track);
+      const playFrom = Math.max(clipStart, regionStart);
+      const playUntil = Math.min(clipEnd, regionEnd);
+      if (playUntil - playFrom < 0.005) continue;
+      const rate = this.clipRate(track);
+      const bufferOffset = Math.min(buffer.duration - 0.001, Math.max(0, (playFrom - clipStart) * rate));
+      const duration = Math.min(Math.max(0.01, (playUntil - playFrom) * rate), buffer.duration - bufferOffset);
+      if (duration < 0.005 || bufferOffset >= buffer.duration - 0.001) continue;
       const source = this.ctx.createBufferSource();
-      source.buffer = track.buffer;
-      const rate = track.clipBpm ? this.metroBpm / track.clipBpm : 1;
-      source.playbackRate.setValueAtTime(rate, when);
+      source.buffer = buffer;
+      const rateAt = Math.max(this.ctx.currentTime, passWhen);
+      source.playbackRate.setValueAtTime(rate, rateAt);
       source.connect(track.input);
-      if (!this.scheduleRegion(source, track, when)) {
-        source.disconnect();
+      source.onended = () => {
+        try {
+          source.disconnect();
+        } catch {
+          /* already disconnected */
+        }
+      };
+      try {
+        source.start(passWhen + (playFrom - regionStart), bufferOffset, duration);
+      } catch {
+        try {
+          source.disconnect();
+        } catch {
+          /* already disconnected */
+        }
         continue;
       }
       this.sources.push({ node: source, clipBpm: track.clipBpm });
     }
   }
 
-  /** Returns false when the clip does not overlap the loop region. */
-  private scheduleRegion(source: AudioBufferSourceNode, track: Track, when: number): boolean {
-    const buffer = track.buffer;
-    if (!buffer) return false;
-    if (!this.loopOn) {
-      source.start(when);
-      return true;
+  private handoff(when: number): void {
+    for (const source of this.sources) {
+      try {
+        source.node.stop(when);
+      } catch {
+        /* already stopped */
+      }
     }
-    if (track.clipBpm && buffer.duration > 0.2) {
-      let offset = (((this.loopStartBar - 1) * 4 * 60) / track.clipBpm) % buffer.duration;
-      if (offset >= buffer.duration - 0.001) offset = 0;
-      source.loop = true;
-      source.loopStart = 0;
-      source.loopEnd = buffer.duration;
-      source.start(when, offset);
-      return true;
-    }
-    const offset = this.loopStartSec;
-    if (offset >= buffer.duration - 0.005) return false;
-    const available = buffer.duration - offset;
-    const region = Math.max(0.01, Math.min(this.loopLengthSec, available));
-    source.start(when, offset, region);
-    return true;
+    this.sources = [];
+    this.scheduledPass += 1;
+    this.spawnPass(when, this.loopStartSec, false);
   }
 
   private stopSources(): void {
@@ -1695,13 +1829,51 @@ export class StudioEngine {
         peaks: track.peaks.slice(),
         name: track.name,
         clipBpm: track.clipBpm,
+        startBeat: track.startBeat,
       })),
     };
   }
 
   private trackDuration(track: Track): number {
+    return this.clipWallLength(track);
+  }
+
+  private secondsPerBeat(): number {
+    return 60 / Math.max(1, this.metroBpm);
+  }
+
+  private clipRate(track: Track): number {
+    return track.clipBpm ? this.metroBpm / track.clipBpm : 1;
+  }
+
+  private clipWallStart(track: Track): number {
+    return Math.max(0, track.startBeat) * this.secondsPerBeat();
+  }
+
+  private clipWallLength(track: Track): number {
     if (track.pending && this.ctx) return track.samples / this.ctx.sampleRate;
-    return track.buffer?.duration ?? 0;
+    if (!track.buffer) return 0;
+    return track.buffer.duration / Math.max(0.001, this.clipRate(track));
+  }
+
+  private renderArranged(track: Track, sampleRate: number): { left: Float32Array; right: Float32Array } | null {
+    const buffer = track.buffer;
+    if (!buffer || sampleRate <= 0) return null;
+    const rate = Math.max(0.001, this.clipRate(track));
+    const start = Math.max(0, Math.round(this.clipWallStart(track) * sampleRate));
+    const frames = Math.max(1, Math.ceil((buffer.duration / rate) * sampleRate));
+    const left = new Float32Array(start + frames);
+    const right = new Float32Array(start + frames);
+    const srcL = buffer.getChannelData(0);
+    const srcR = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : srcL;
+    const srcRate = buffer.sampleRate;
+    for (let i = 0; i < frames; i++) {
+      const index = Math.floor((i * rate * srcRate) / sampleRate);
+      if (index < 0 || index >= srcL.length) continue;
+      left[start + i] = srcL[index] ?? 0;
+      right[start + i] = srcR[index] ?? 0;
+    }
+    return { left, right };
   }
 
   private inputLooksActive(): boolean {
@@ -1750,6 +1922,11 @@ export class StudioEngine {
     this.micStream?.getTracks().forEach((track) => track.stop());
     this.micStream = null;
   }
+}
+
+function formatBeat(beat: number): string {
+  const rounded = Math.round(beat * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
 }
 
 function mapMicError(error: unknown): { state: MicState; message: string } {
