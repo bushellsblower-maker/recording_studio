@@ -29,6 +29,17 @@ export interface StoredMarker {
   name: string;
 }
 
+export interface StoredArrangementClip {
+  name: string;
+  bpm: number | null;
+  startBeat: number;
+  trimStart: number;
+  trimEnd: number;
+  fadeInBeats: number;
+  fadeOutBeats: number;
+  clip: StoredClip;
+}
+
 export interface StoredTrack {
   armed: boolean;
   muted: boolean;
@@ -52,6 +63,8 @@ export interface StoredTrack {
   panAuto: StoredPoint[];
   fxAuto: StoredPoint[];
   clip: StoredClip | null;
+  /** Every arrangement clip on the lane. Older saves only have `clip`. */
+  arrangement?: StoredArrangementClip[];
   slots: (StoredSlot | null)[];
   sessionSlot: number | null;
 }
