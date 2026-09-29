@@ -482,6 +482,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
       paintGrid();
     });
     main.addEventListener('dragstart', (event) => {
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
       event.dataTransfer?.setData('application/x-rs-sample', sample.id);
       event.dataTransfer?.setData('text/plain', sample.name);
     });

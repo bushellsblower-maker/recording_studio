@@ -78,7 +78,7 @@ api.view = buildView({
   trackDb: (index, db) => api.engine?.setTrackDb(index, db),
   trackPan: (index, pan) => api.engine?.setTrackPan(index, pan),
   trackKind: (index, kind) => api.engine?.setTrackKind(index, kind),
-  trackStart: (index, beat) => api.engine?.setTrackStartBeat(index, beat),
+  trackStart: (index, beat, clipId) => api.engine?.setTrackStartBeat(index, beat, clipId),
   trackImport: (index, file, beat) => {
     void file.arrayBuffer().then((data) => api.engine?.importEncoded(index, data, file.name, beat));
   },
@@ -136,7 +136,7 @@ api.view = buildView({
   addMarker: () => api.engine?.addMarker(),
   removeMarker: (id) => api.engine?.removeMarker(id),
   locate: (beat) => api.engine?.locate(beat),
-  editClipEdge: (index, edge, beat) => api.engine?.editClipEdge(index, edge, beat),
+  editClipEdge: (index, edge, beat, clipId) => api.engine?.editClipEdge(index, edge, beat, clipId),
   setInsert: (track, slot, kind) => api.engine?.setInsert(track, slot, kind),
   moveInsert: (track, from, to) => api.engine?.moveInsert(track, from, to),
   bypassInsert: (track, slot, bypass) => api.engine?.setInsertBypass(track, slot, bypass),
@@ -306,6 +306,7 @@ function loop(): void {
     eq: device.eq,
     bpm: engine.bpm(),
     spans: engine.clipSpans(),
+    lanes: engine.laneClips(),
     loopStartBeat: engine.loopStartBeat(),
     loopBeats: engine.loopLengthBeats(),
     looping: engine.isLooping(),
