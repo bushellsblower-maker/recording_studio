@@ -68,7 +68,7 @@ const SECTIONS: Array<{ title: string; intro?: string; items: Array<[string, str
       ['Level', 'That track’s volume in the mix and in MIX WAV.'],
       ['Pan', 'Moves the track left or right.'],
       ['Lane meter', 'A small meter of that track while it plays.'],
-      ['Waveform', 'Each bar is as wide as that sound is long, and the time written on it is that length. Drop a browser sound or an audio file on the lane to add a clip at that beat. Another drop adds another clip; it does not replace the ones already there. Drag the middle of a clip to move it. Drag either edge to trim. Hold Alt and drag an edge to set a fade.'],
+      ['Waveform', 'Each bar is one sample. Its width is how long that sample is, and the name and time on the bar say which sample and how long. Drop several sounds on the same lane at different beats; each drop adds a clip and leaves the others. Drag the middle of a clip to move it. Drag either edge to trim. Hold Alt and drag an edge to set a fade.'],
       ['Time', 'How far that track’s clips reach, counting from the start of the arrangement.'],
       ['IMP', 'Imports a WAV, MP3, or other audio file onto the track at the start. Another import adds another clip.'],
       ['WAV', 'Downloads that track as a WAV, without the mix processing. One clip is the raw file. Several clips are mixed into one file.'],

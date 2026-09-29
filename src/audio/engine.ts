@@ -2712,7 +2712,8 @@ export class StudioEngine {
     }
     track.buffer = clip.buffer;
     track.peaks = clip.peaks;
-    track.name = track.clips.length > 1 ? `${clip.name} +${track.clips.length - 1}` : clip.name;
+    const ordered = track.clips.slice().sort((a, b) => a.startBeat - b.startBeat || a.id.localeCompare(b.id));
+    track.name = ordered.map((item) => item.name).join(', ');
     track.clipBpm = clip.clipBpm;
     track.startBeat = clip.startBeat;
     track.trimStart = clip.trimStart;
@@ -2999,7 +3000,7 @@ export class StudioEngine {
         solo: track.solo,
         gainDb: track.gainDb,
         pan: track.pan,
-        name: track.name,
+        name: this.headClip(track)?.name ?? '',
         kind: track.kind,
         startBeat: track.startBeat,
         clipBpm: track.clipBpm,
