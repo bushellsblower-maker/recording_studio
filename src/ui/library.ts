@@ -437,18 +437,23 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   function renderChip(sample: SampleMeta): HTMLElement {
     const chip = document.createElement('div');
     chip.className = 'sample-chip';
+    chip.dataset.cat = sample.category;
     chip.classList.toggle('on', sample.id === selected);
     const main = document.createElement('button');
     main.type = 'button';
     main.className = 'sample-main';
     main.draggable = true;
+    const tip = `${sample.name} — ${metaLine(sample)}`;
+    main.title = tip;
+    main.setAttribute('aria-label', tip);
+    const mark = document.createElement('span');
+    mark.className = 'sample-mark';
+    mark.setAttribute('aria-hidden', 'true');
+    mark.textContent = tileMark(sample);
     const name = document.createElement('span');
     name.className = 'sample-name';
     name.textContent = sample.name;
-    const meta = document.createElement('span');
-    meta.className = 'sample-meta';
-    meta.textContent = metaLine(sample);
-    main.append(name, meta);
+    main.append(mark, name);
     main.addEventListener('click', () => {
       selected = sample.id;
       loadBtn.disabled = false;
@@ -652,6 +657,20 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   setTarget(0);
 
   return { element, play, setCatalog, setTarget, fail };
+}
+
+function tileMark(sample: SampleMeta): string {
+  const known: Record<string, string> = {
+    Drums: 'DR',
+    Perc: 'PC',
+    Bass: 'BA',
+    Keys: 'KY',
+    Vocal: 'VO',
+    FX: 'FX',
+    Ambience: 'AM',
+    Loops: 'LP',
+  };
+  return known[sample.category] ?? sample.category.slice(0, 2).toUpperCase();
 }
 
 function metaLine(sample: SampleMeta): string {

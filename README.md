@@ -18,7 +18,7 @@ Open the local URL Vite prints. Click **Power** before using the transport.
 Track 1 starts armed. The tone generator is the default input, and a CC0 session kit is built in.
 
 1. Press **Power**.
-2. In **Browser** (the Sounds tab on a phone), search or filter, tap a sound to preview it, then **Place** on the highlighted track or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loop tempos set the click to match.
+2. In **Browser** (the Sounds tab on a phone), search or filter. Sounds are tiles; the name shows when you hover or focus one. Tap a tile to preview it, then **Place** on the highlighted track or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loop tempos set the click to match.
 3. Press **Play**. The playhead runs on the bar grid. Drag a clip to move it. The arrangement **Play** range sets where playback starts and stops. **Loop region** repeats that span, and **Loop selection** repeats the highlighted clip. Dragging the bar ruler sets the same range. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded. The transport shows **4/4**.
 4. Press **Record**, then **Stop**, to print the armed tracks. Audio 1–4 print the channel. Inst 5–8 print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
