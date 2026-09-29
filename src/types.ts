@@ -6,6 +6,8 @@ export type ToneShape = OscillatorType | 'noise';
 
 export type TransportMode = 'stopped' | 'playing' | 'recording' | 'stopping';
 
+export type TrackKind = 'audio' | 'instrument';
+
 export type MicState = 'off' | 'pending' | 'on' | 'denied' | 'missing' | 'busy' | 'error';
 
 export interface TrackSnapshot {
@@ -15,6 +17,8 @@ export interface TrackSnapshot {
   hasAudio: boolean;
   duration: number;
   name: string;
+  kind: TrackKind;
+  startBeat: number;
 }
 
 export interface EngineSnapshot {
