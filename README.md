@@ -36,7 +36,9 @@ Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for
 
 ### Desk layout
 
-On a wide screen the desk is one surface: transport across the top, browser on the left, arrangement in the center, console on the right, and pads plus keys along the bottom. Below about 1280px the console moves under the arrangement. Below 900px the phone layout keeps the transport docked and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the inserts and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
+From about 900px up, the desk is one surface. Transport stays across the top. The browser is a full-height column on the left. The arrangement fills the center, with the master beside the lanes. The console sits under the arrangement as five modules side by side (Input, Channel, EQ, Dynamics, FX), scrolling inside that band when the window is short. Pads and keys are a slim strip along the bottom. Narrower desktop windows keep that same arrangement; the console band scrolls sideways instead of turning into a phone stack.
+
+Below 900px the phone layout docks the transport and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the inserts and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
 
 The first-run strip (Pick a sound, Place it, Arm and record, Mix and bounce) jumps to the matching zone. Hide dismisses it on this browser.
 
