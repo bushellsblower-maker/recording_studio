@@ -1,4 +1,7 @@
-/** Desktop desk: two columns of sections, with visible splitters and drag grips. */
+/** Desktop desk: two columns of sections, with visible splitters and drag grips.
+ *  Pane heights are a share of the viewport, so section contents reflow instead of
+ *  each panel growing its own scrollbar.
+ */
 
 const STORAGE_KEY = 'rs4-desk-layout';
 const DESKTOP_QUERY = '(min-width: 900px)';
@@ -120,9 +123,15 @@ export function attachDeskLayout(
   let state = loadLayout();
   let dragId: DeskZoneId | null = null;
   let drop: DropAt | null = null;
+  let renderGen = 0;
+  let chromeObserver: ResizeObserver | null = null;
   const indicator = document.createElement('div');
   indicator.className = 'desk-drop';
   indicator.hidden = true;
+
+  window.addEventListener('resize', () => {
+    if (mq.matches) applyMetrics();
+  });
 
   for (const id of DESK_ZONES) {
     zones[id].dataset.deskZone = id;
@@ -184,12 +193,14 @@ export function attachDeskLayout(
   }
 
   function render(): void {
+    renderGen += 1;
     const desktop = mq.matches;
     desk.classList.toggle('is-desktop-layout', desktop);
     if (!desktop) {
+      desk.style.minHeight = '';
       for (const id of DESK_ZONES) {
         zones[id].classList.remove('desk-pane', 'is-dragging');
-        zones[id].style.flex = '';
+        clearPaneBox(zones[id]);
       }
       desk.replaceChildren(zones.browse, zones.arrange, zones.devices, zones.console, zones.play);
       return;
@@ -223,6 +234,12 @@ export function attachDeskLayout(
     if (leftEmpty || rightEmpty) split.classList.add('is-locked');
     desk.replaceChildren(columns[0]!, split, columns[1]!, indicator);
     applyMetrics();
+    const gen = renderGen;
+    requestAnimationFrame(() => {
+      if (gen !== renderGen || !mq.matches) return;
+      ensureChromeWatch();
+      applyMetrics();
+    });
   }
 
   function applyMetrics(): void {
@@ -246,11 +263,81 @@ export function attachDeskLayout(
       }
     }
     if (split && (leftEmpty || rightEmpty)) split.style.flexBasis = dragging ? '8px' : '0px';
-    for (const id of DESK_ZONES) {
+    const budget = measureBudget();
+    if (budget == null) return;
+    desk.style.minHeight = `${budget}px`;
+    layoutColumn(0, budget);
+    layoutColumn(1, budget);
+  }
+
+  function ensureChromeWatch(): void {
+    const app = desk.parentElement;
+    if (!app || chromeObserver) return;
+    chromeObserver = new ResizeObserver(() => {
+      if (mq.matches) applyMetrics();
+    });
+    for (const child of app.children) {
+      if (child !== desk && child instanceof HTMLElement) chromeObserver.observe(child);
+    }
+  }
+
+  /** Viewport height left after the header, transport, status line, and footer. */
+  function measureBudget(): number | null {
+    const app = desk.parentElement;
+    if (!app?.isConnected) return null;
+    const style = getComputedStyle(app);
+    const pad = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+    const gap = parseFloat(style.rowGap) || parseFloat(style.gap) || 0;
+    let chrome = pad;
+    let siblings = 0;
+    for (const child of app.children) {
+      if (!(child instanceof HTMLElement) || child === desk) continue;
+      if (child.offsetHeight <= 0) continue;
+      chrome += child.offsetHeight;
+      siblings += 1;
+    }
+    chrome += gap * siblings;
+    // Stay a hair under the viewport so rounding does not open a page scrollbar.
+    return Math.max(280, Math.round(window.innerHeight - chrome) - 4);
+  }
+
+  function layoutColumn(index: 0 | 1, budget: number): void {
+    const column = desk.querySelector<HTMLElement>(`.desk-col[data-col="${index}"]`);
+    const ids = state.columns[index];
+    if (!column || ids.length === 0) return;
+
+    const expanded: DeskZoneId[] = [];
+    let collapsedPx = 0;
+    for (const id of ids) {
       const pane = zones[id];
       if (!pane.classList.contains('desk-pane')) continue;
-      pane.style.flex = isCollapsed(id) ? '0 0 auto' : `${state.size[id]} 1 0px`;
+      if (isCollapsed(id)) {
+        pane.style.flex = '0 0 auto';
+        pane.style.height = 'auto';
+        pane.style.minHeight = '0';
+        pane.style.maxHeight = 'none';
+        collapsedPx += pane.offsetHeight;
+      } else {
+        expanded.push(id);
+      }
     }
+
+    const splitCount = column.querySelectorAll('.pane-split').length;
+    const sample = column.querySelector<HTMLElement>('.pane-split');
+    const splitPx = sample && sample.offsetHeight > 0 ? sample.offsetHeight : 8;
+    const available = budget - collapsedPx - splitCount * splitPx;
+    const heights = splitHeights(
+      expanded.map((id) => state.size[id]),
+      available,
+    );
+    expanded.forEach((id, paneIndex) => {
+      const pane = zones[id];
+      const px = heights[paneIndex] ?? 0;
+      pane.style.flex = '1 0 auto';
+      pane.style.height = `${px}px`;
+      pane.style.minHeight = '0';
+      pane.style.maxHeight = 'none';
+    });
   }
 
   function isCollapsed(id: DeskZoneId): boolean {
@@ -544,6 +631,28 @@ export function attachDeskLayout(
     indicator.style.width = `${width}px`;
     indicator.style.height = `${height}px`;
   }
+}
+
+function clearPaneBox(pane: HTMLElement): void {
+  pane.style.flex = '';
+  pane.style.height = '';
+  pane.style.minHeight = '';
+  pane.style.maxHeight = '';
+}
+
+/** Split a pixel budget across panes in proportion to their weights. */
+function splitHeights(weights: readonly number[], available: number): number[] {
+  const count = weights.length;
+  if (count === 0) return [];
+  const room = Math.max(0, Math.round(available));
+  const total = weights.reduce((sum, weight) => sum + weight, 0) || 1;
+  const heights = weights.map((weight) => Math.floor((room * weight) / total));
+  let extra = room - heights.reduce((sum, height) => sum + height, 0);
+  for (let index = 0; extra > 0; index += 1) {
+    heights[index % count] = (heights[index % count] ?? 0) + 1;
+    extra -= 1;
+  }
+  return heights;
 }
 
 function clamp(value: number, min: number, max: number): number {
