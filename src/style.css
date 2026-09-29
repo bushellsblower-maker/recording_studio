@@ -414,6 +414,35 @@ select {
 }
 .wave.ruler { height: 22px; cursor: ew-resize; }
 .wave.is-clip { cursor: grab; }
+
+.zone-arrange .zone-head { flex-wrap: wrap; }
+.clip-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.clip-menu {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  padding: 4px;
+  background: #161b22;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+.clip-menu[hidden] { display: none; }
+.clip-menu-item {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+.clip-menu-item:hover:not(:disabled),
+.clip-menu-item:focus-visible { background: rgba(244, 247, 251, 0.08); }
+.clip-menu-item:disabled { color: var(--dim); cursor: default; }
 .ruler-row {
   background: transparent;
   border-color: transparent;
@@ -1198,7 +1227,7 @@ select {
   .brand p { display: none; }
   .topbar { gap: 8px; }
   .pills .rate { display: none; }
-  .btn.rec, .btn.stop, .btn.play, .btn.reset, .btn.power, .zone-tab, .instructions-open, .help-close { min-height: 44px; }
+  .btn.rec, .btn.stop, .btn.play, .btn.reset, .btn.power, .zone-tab, .instructions-open, .help-close, .clip-tool, .clip-menu-item { min-height: 44px; }
   .knob-dial { width: 52px; height: 52px; }
   .knob-mark { top: 8px; height: 14px; transform-origin: center 18px; }
   .library-search { min-height: 40px; padding: 8px 10px; }

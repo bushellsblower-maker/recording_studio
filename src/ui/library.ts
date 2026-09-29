@@ -264,7 +264,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   }
 
   window.addEventListener('keydown', (event) => {
-    if (isTyping(event.target) || event.repeat) return;
+    if (isTyping(event.target) || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
     const midi = KEYBOARD[event.code];
     if (!midi) return;
     event.preventDefault();

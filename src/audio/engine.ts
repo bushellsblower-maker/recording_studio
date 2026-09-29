@@ -96,6 +96,17 @@ interface ArrangementClip {
   fadeOutBeats: number;
 }
 
+interface ClipClipboard {
+  buffer: AudioBuffer;
+  peaks: number[];
+  name: string;
+  clipBpm: number | null;
+  trimStart: number;
+  trimEnd: number;
+  fadeInBeats: number;
+  fadeOutBeats: number;
+}
+
 export interface LaneClip {
   id: string;
   name: string;
@@ -232,6 +243,7 @@ export class StudioEngine {
   private keyLayers: Array<{ buffer: AudioBuffer; rootMidi: number }> | null = null;
   private undoStack: History[] = [];
   private clipSerial = 1;
+  private clipboard: ClipClipboard | null = null;
   private redoStack: History[] = [];
   private launches: PendingLaunch[] = [];
   private meterBufs: Float32Array<ArrayBuffer>[] = [];
@@ -1151,6 +1163,75 @@ export class StudioEngine {
     this.syncMirror(track);
     if (this.mode === 'playing') this.play();
     else this.listener.onChange();
+  }
+
+  removeClip(index: number, clipId: string): void {
+    const track = this.tracks[index];
+    if (!track || !clipId || clipId === 'pending') return;
+    if (this.busyRecording()) return;
+    const at = track.clips.findIndex((clip) => clip.id === clipId);
+    const clip = track.clips[at];
+    if (!clip) return;
+    this.stash();
+    track.clips.splice(at, 1);
+    this.syncMirror(track);
+    this.status(`Removed ${clip.name} from track ${index + 1}.`);
+    if (this.mode === 'playing') this.play();
+    else this.listener.onChange();
+  }
+
+  copyClip(index: number, clipId: string): boolean {
+    const track = this.tracks[index];
+    const clip = track?.clips.find((item) => item.id === clipId);
+    if (!clip) {
+      this.status('Select a clip before copying.');
+      return false;
+    }
+    this.clipboard = {
+      buffer: clip.buffer,
+      peaks: clip.peaks.slice(),
+      name: clip.name,
+      clipBpm: clip.clipBpm,
+      trimStart: clip.trimStart,
+      trimEnd: clip.trimEnd,
+      fadeInBeats: clip.fadeInBeats,
+      fadeOutBeats: clip.fadeOutBeats,
+    };
+    this.status(`Copied ${clip.name}. Paste puts it on the selected track at the cue. Right-click a lane to paste at that beat.`);
+    return true;
+  }
+
+  pasteClip(index: number, startBeat: number): string | null {
+    const track = this.tracks[index];
+    const copied = this.clipboard;
+    if (!track || !copied) {
+      this.status('Copy a clip first.');
+      return null;
+    }
+    if (this.busyRecording()) return null;
+    this.stash();
+    const clip = this.cloneClip(copied, startBeat);
+    track.clips.push(clip);
+    this.syncMirror(track);
+    this.status(`Pasted ${clip.name} on track ${index + 1} at beat ${formatBeat(clip.startBeat)}.`);
+    if (this.mode === 'playing') this.play();
+    else this.listener.onChange();
+    return clip.id;
+  }
+
+  duplicateClip(index: number, clipId: string): string | null {
+    const track = this.tracks[index];
+    const clip = track?.clips.find((item) => item.id === clipId);
+    if (!track || !clip) return null;
+    if (this.busyRecording()) return null;
+    this.stash();
+    const copy = this.cloneClip(clip, clip.startBeat + this.lengthBeatsOf(clip));
+    track.clips.push(copy);
+    this.syncMirror(track);
+    this.status(`Duplicated ${clip.name} on track ${index + 1}. The copy starts when the original ends.`);
+    if (this.mode === 'playing') this.play();
+    else this.listener.onChange();
+    return copy.id;
   }
 
   addMarker(beat?: number): void {
@@ -2671,6 +2752,39 @@ export class StudioEngine {
       if (!best || clip.startBeat < best.startBeat) best = clip;
     }
     return best;
+  }
+
+  private busyRecording(): boolean {
+    if (this.mode !== 'recording' && this.mode !== 'stopping') return false;
+    this.status('Stop recording before editing clips.');
+    return true;
+  }
+
+  private cloneClip(
+    source: {
+      buffer: AudioBuffer;
+      peaks: readonly number[];
+      name: string;
+      clipBpm: number | null;
+      trimStart: number;
+      trimEnd: number;
+      fadeInBeats: number;
+      fadeOutBeats: number;
+    },
+    startBeat: number,
+  ): ArrangementClip {
+    return {
+      id: `c${this.clipSerial++}`,
+      buffer: source.buffer,
+      peaks: source.peaks.slice(),
+      name: source.name,
+      clipBpm: source.clipBpm,
+      startBeat: Math.max(0, Math.min(256, startBeat)),
+      trimStart: source.trimStart,
+      trimEnd: source.trimEnd,
+      fadeInBeats: source.fadeInBeats,
+      fadeOutBeats: source.fadeOutBeats,
+    };
   }
 
   private clipById(track: Track, clipId?: string): ArrangementClip | null {
