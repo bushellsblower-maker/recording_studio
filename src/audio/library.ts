@@ -6,6 +6,8 @@ export interface SampleMeta {
   file: string;
   bpm: number | null;
   bars: number | null;
+  /** virtuosity = recorded CC0 excerpt or a loop made from those hits. original = synthesis for this repo. */
+  credit?: 'virtuosity' | 'original' | string;
 }
 
 interface CatalogFile {

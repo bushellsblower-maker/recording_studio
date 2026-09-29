@@ -18,9 +18,9 @@ Open the local URL Vite prints. Click **Power** before using the transport.
 Track 1 starts armed. The tone generator is the default input, and a CC0 session kit is built in.
 
 1. Press **Power**.
-2. In the side **Browser**, click a loop to preview it, then **Load on track** or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loops are 100 BPM and set the click to match.
+2. In **Browser** (the Sounds tab on a phone), search or filter, tap a sound to preview it, then **Place** on the highlighted track or drag it onto the arrangement. The drop snaps to the beat (hold Shift for 16ths). Loop tempos set the click to match.
 3. Press **Play**. The playhead runs on the bar grid. Drag a clip to move it, or drag the ruler to set the loop. Pads quantize to the beat while the transport is running. **METRO** turns the click on; it is not recorded. The transport shows **4/4**.
-4. Press **Record**, then **Stop**, to print the armed tracks. Tracks 1–4 start as audio tracks and print the channel. Tracks 5–8 start as instrument tracks and print pads and keys. **Undo** restores the previous take.
+4. Press **Record**, then **Stop**, to print the armed tracks. Audio 1–4 print the channel. Inst 5–8 print pads and keys. **Undo** restores the previous take.
 5. Raise **Monitor** only when you want to hear the live chain. It starts at -inf so a microphone cannot feed back into the speakers.
 
 The on-screen keys (or A–K on the computer keyboard) play a simple synth through the master. Drop a WAV or MP3 on a track, or use **IMP**, to import your own audio.
@@ -33,6 +33,12 @@ The on-screen keys (or A–K on the computer keyboard) play a simple synth throu
 4. Arm a track and press **Record**. Tracks that are not armed play back underneath the new take.
 
 Space plays or stops. R records. A–K plays the keyboard. Shift-drag a knob for a finer change. Double-click a knob or fader to reset it. **QUANT** locks pads to the beat while play or record is running. **LOOP** repeats a bar region (1, 2, 4, or 8 bars) and, when recording, ends the take at the end of that region. The channel strip shows the insert chain: Pre, HPF, EQ, and Comp stay in the path; Gate, Delay, and Verb light up when they are in use.
+
+### Desk layout
+
+On a wide screen the desk is one surface: transport across the top, browser on the left, arrangement in the center, console on the right, and pads plus keys along the bottom. Below about 1280px the console moves under the arrangement. Below 900px the phone layout keeps the transport docked and switches the main pane with **Arrange**, **Mix**, **Sounds**, and **Play**. Arrange scrolls the lanes. Mix shows the inserts and the level/pan strips. Sounds is the searchable library. Play is the pads and keys. Those controls are buttons, not hover-only actions.
+
+The first-run strip (Pick a sound, Place it, Arm and record, Mix and bounce) jumps to the matching zone. Hide dismisses it on this browser.
 
 Check the project with:
 
@@ -69,14 +75,16 @@ Audio tracks record the channel after the inserts, fader, and pan. Instrument tr
 
 ## Sample library
 
-The playable kit lives in `public/samples/` and is served with the site. Drum one-shots are trimmed excerpts of [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) (CC0) performed by Austin McMahon. The loops sequence those hits. Bass, keys, shaker, and FX are original synthesis dedicated to CC0 for this project. Names, files, and licenses are in `public/samples/ATTRIBUTION.md` and under **Sample credits** in the console. Rebuild the pack with `python3 scripts/build-session-kit.py` if you have `ffmpeg`.
+The playable kit lives in `public/samples/` and is served with the site. The current pack is 442 CC0 sounds, about 20 MB. `catalog.json` is the index. Audio files load only when you preview, place, or trigger them. The browser can search, filter by category, hits versus loops, and BPM, and it can star favorites in this browser.
+
+Recorded drums are trimmed excerpts of [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) (CC0) performed by Austin McMahon. House, half-time, and break loops sequence those hits at several tempos. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and the remaining loops are original synthesis dedicated to CC0 for this project. The vocal chops are not a recorded singer. Names, files, and licenses are in `public/samples/ATTRIBUTION.md` and under **Sample credits** in the browser. Rebuild with `python3 scripts/build-library.py` (numpy, ffmpeg, and network access to the Virtuosity repository). `scripts/build-session-kit.py` runs that same builder.
 
 ## Limits
 
 - One browser input (the default microphone). There is no multi-interface routing.
 - Output latency is the browser and device latency. Speakers plus a live monitor can howl; the monitor starts off and warns when you raise it.
 - Track audio is 32-bit float in memory and 16-bit stereo PCM on disk. A few minutes on eight tracks is hundreds of megabytes.
-- The metronome is a cue. It is not recorded. Library loops are 100 BPM and follow the session tempo (pitch follows the click).
+- The metronome is a cue. It is not recorded. Library loops ship at 80, 90, 100, 110, 120, 128, and 140 BPM. Loading one sets the session tempo, and playback pitch follows the click.
 - Armed tracks of the same type receive the same bus. Audio tracks print the channel. Instrument tracks print pads and keys. Arm state and track type are locked while the transport is recording.
 - Each track holds one clip. Drag it on the bar grid to change where it starts. **Undo** restores clips, including their start positions, from before the last record, load, import, or reset.
 - **LOOP** repeats playback across the chosen bars, including clips that start inside the region. A recorded take still runs once and stops at the end of the region, and the new clip starts at the loop.
