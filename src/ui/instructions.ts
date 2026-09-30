@@ -162,7 +162,7 @@ const SECTIONS: Array<{ title: string; intro?: string; items: Array<[string, str
     intro: 'The Play tab on a phone. Pads and keys record onto armed instrument tracks.',
     items: [
       ['Kit', 'Acoustic kit, Electro kit, or Percussion. Choosing a kit fills all eight pads. After you change a single pad, the menu shows a custom mapping.'],
-      ['Pads', 'Eight one-shots. Press a pad to play it. Higher on the pad is softer. While the transport runs and QUANT is on, the hit waits for the next beat.'],
+      ['Pads', 'Eight one-shots. Press a pad to play it. Hold and drag across the pads: each pad plays once as you enter it, with the mouse or a finger. Higher on the pad is softer. While the transport runs and QUANT is on, the hit waits for the next beat.'],
       ['Pad menus', 'Picks a different one-shot for that pad. You can also drop a browser sound onto a pad.'],
       ['Voice', 'What the keys play. Desk synth uses the Devices synth. The named banks play chromatic samples (EP, saw, sub, pluck, bass, keys, and the vox banks that are in the library). Browser plays the sound selected in the browser, at its own pitch on the named note and transposed from there.'],
       ['Keys', 'The on-screen piano. Hold the mouse or a finger and drag across the keys: each key plays as you enter it and releases when you leave it. Let go to release the last key. A–K on the keyboard plays the same voice. Shift is softer. Higher on a key is softer. C marks middle C and the C above it.'],

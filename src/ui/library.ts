@@ -123,7 +123,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   playTitle.textContent = 'Perform';
   const playHint = document.createElement('p');
   playHint.className = 'note';
-  playHint.textContent = 'Each pad plays its sample. Pick a kit or choose a one-shot per pad. The Voice menu switches the keys between the desk synth and sample banks. Higher on a pad or key is softer. Hold and drag across the keys to glide.';
+  playHint.textContent = 'Each pad plays its sample. Hold and drag across the pads or the keys to play each one you enter. Pick a kit or choose a one-shot per pad. The Voice menu switches the keys between the desk synth and sample banks. Higher on a pad or key is softer.';
   playHead.append(playTitle);
   const kitLabel = document.createElement('label');
   kitLabel.className = 'kit-pick';
@@ -161,6 +161,8 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   const keyButtons = new Map<number, HTMLButtonElement>();
   /** Pointer id → midi currently held by that pointer, or null while the press is between keys. */
   const glide = new Map<number, number | null>();
+  /** Pointer id → pad index currently held, or null while the press is between pads. */
+  const padGlide = new Map<number, number | null>();
 
   let samples: SampleMeta[] = [];
   let category = 'All';
@@ -209,14 +211,11 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     pad.type = 'button';
     pad.className = 'pad';
     pad.textContent = `Pad ${index + 1}`;
+    pad.dataset.pad = String(index);
     const pick = document.createElement('select');
     pick.className = 'pad-pick';
     pick.setAttribute('aria-label', `Pad ${index + 1} sample`);
-    pad.addEventListener('pointerdown', (event) => {
-      const id = padIds[index];
-      if (!id) return;
-      handlers.trigger(id, velocityAt(event, pad));
-    });
+    bindPad(pad, index);
     pick.addEventListener('change', () => {
       if (!pick.value) return;
       assignPad(index, pick.value);
@@ -320,6 +319,73 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
       keyButtons.get(previous)?.classList.remove('is-down');
       handlers.noteOff(previous);
     }
+  }
+
+  function padHeld(index: number): boolean {
+    for (const current of padGlide.values()) {
+      if (current === index) return true;
+    }
+    return false;
+  }
+
+  function padUnder(x: number, y: number): { pad: HTMLButtonElement; index: number } | null {
+    const hit = document.elementFromPoint(x, y);
+    const button = hit instanceof Element ? hit.closest('.pad') : null;
+    if (!(button instanceof HTMLButtonElement) || !pads.contains(button)) return null;
+    const index = Number(button.dataset.pad);
+    if (!Number.isInteger(index) || index < 0 || index >= PAD_COUNT) return null;
+    return { pad: button, index };
+  }
+
+  /** Fire a pad when the held pointer enters it. One-shots ring out; leaving does not retrigger. */
+  function setPadGlide(pointerId: number, index: number | null, velocity: number): void {
+    const previous = padGlide.has(pointerId) ? (padGlide.get(pointerId) ?? null) : null;
+    if (padGlide.has(pointerId) && previous === index) return;
+    padGlide.set(pointerId, index);
+    if (previous !== null && !padHeld(previous)) padButtons[previous]?.classList.remove('is-down');
+    if (index === null) return;
+    padButtons[index]?.classList.add('is-down');
+    const id = padIds[index];
+    if (id) handlers.trigger(id, velocity);
+  }
+
+  function endPadGlide(pointerId: number): void {
+    if (!padGlide.has(pointerId)) return;
+    const previous = padGlide.get(pointerId) ?? null;
+    padGlide.delete(pointerId);
+    if (previous !== null && !padHeld(previous)) padButtons[previous]?.classList.remove('is-down');
+  }
+
+  function bindPad(pad: HTMLButtonElement, index: number): void {
+    pad.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      event.preventDefault();
+      try {
+        pad.setPointerCapture(event.pointerId);
+      } catch {
+        /* The pointer can already be gone. */
+      }
+      setPadGlide(event.pointerId, index, velocityAt(event, pad));
+    });
+    pad.addEventListener('pointermove', (event) => {
+      if (!padGlide.has(event.pointerId)) return;
+      if (event.pointerType === 'mouse' && (event.buttons & 1) === 0) {
+        endPadGlide(event.pointerId);
+        return;
+      }
+      const hit = padUnder(event.clientX, event.clientY);
+      if (!hit) {
+        setPadGlide(event.pointerId, null, 0);
+        return;
+      }
+      setPadGlide(event.pointerId, hit.index, velocityAt(event, hit.pad));
+    });
+    const release = (event: PointerEvent): void => {
+      endPadGlide(event.pointerId);
+    };
+    pad.addEventListener('pointerup', release);
+    pad.addEventListener('pointercancel', release);
+    pad.addEventListener('lostpointercapture', release);
   }
 
   function bindKey(key: HTMLButtonElement, midi: number): void {
