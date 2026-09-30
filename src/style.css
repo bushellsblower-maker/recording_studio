@@ -549,7 +549,7 @@ select {
   font-size: 12px;
   letter-spacing: 0.04em;
 }
-.pad:active, .piano-black.is-down { background: #3a3324; }
+.pad:active, .pad.is-down, .piano-black.is-down { background: #3a3324; }
 .piano-white.is-down { background: #d7c7a1; }
 
 .keys-wrap { margin-top: 4px; overflow-x: auto; }
@@ -853,7 +853,7 @@ select {
   padding: 2px 8px;
 }
 
-.library-filters { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.library-filters { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 .library-cats {
   flex-wrap: wrap;
   overflow: visible;
@@ -862,14 +862,16 @@ select {
   margin-top: 4px;
 }
 .library-cats .btn { flex: 0 0 auto; min-height: 24px; padding: 0 7px; font-size: 11px; }
-.library-target-line { margin-top: 2px; }
-.library-more { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px; }
+.library-target-line { margin-top: 0; line-height: 1.25; }
+.library-more { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 2px; }
+.library .library-actions { margin-top: 2px; gap: 4px; }
 .library-head { gap: 6px; }
 .credits { margin-top: 4px; }
 
 .sample-grid {
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 2px;
+  margin-top: 2px;
   align-content: start;
 }
 
@@ -878,8 +880,9 @@ select {
 .sample-chip {
   position: relative;
   display: block;
-  min-height: 76px;
+  min-height: 0;
   padding: 0;
+  border-radius: 4px;
   overflow: visible;
 }
 
@@ -895,27 +898,28 @@ select {
 .sample-main {
   position: relative;
   width: 100%;
-  min-height: 76px;
+  min-height: 0;
   min-width: 0;
   text-align: left;
   border: 0;
   background: transparent;
   color: inherit;
-  padding: 18px 8px 6px;
+  padding: 11px 14px 1px 3px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 0;
 }
 
 .sample-mark {
   position: absolute;
-  top: 5px;
-  left: 8px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  top: 1px;
+  left: 3px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
   font-weight: 650;
+  line-height: 1;
   color: #c5d0de;
 }
 
@@ -924,11 +928,11 @@ select {
   display: block;
   width: 100%;
   opacity: 1;
-  padding: 0 16px 0 0;
+  padding: 0;
   background: transparent;
   color: var(--text);
-  font-size: 12px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 1.15;
   letter-spacing: 0;
   text-transform: none;
   text-align: left;
@@ -939,10 +943,10 @@ select {
 .sample-length {
   display: block;
   color: #d5deea;
-  font-size: 12px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .sample-chip .fav {
@@ -1068,6 +1072,7 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 10px;
+  touch-action: none;
 }
 .kit-pick, .voice-pick {
   display: flex;
@@ -1233,8 +1238,8 @@ select {
   .knob-dial { width: 52px; height: 52px; }
   .knob-mark { top: 8px; height: 14px; transform-origin: center 18px; }
   .library-search { min-height: 40px; padding: 8px 10px; }
-  .sample-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
-  .sample-chip .fav { width: 28px; height: 28px; font-size: 16px; line-height: 28px; }
+  .sample-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 2px; }
+  .sample-chip .fav { width: 20px; height: 20px; font-size: 13px; line-height: 20px; }
   .library-cats .btn { min-height: 36px; }
   .perform > .note { display: block; }
 
@@ -1666,7 +1671,7 @@ body.desk-dragging .desk-grip { cursor: grabbing; }
   .desk.is-desktop-layout .sample-grid {
     flex: 1 1 auto;
     min-height: 0;
-    margin-top: 4px;
+    margin-top: 2px;
     overflow: auto;
     overscroll-behavior: contain;
     align-content: start;
