@@ -165,7 +165,7 @@ const SECTIONS: Array<{ title: string; intro?: string; items: Array<[string, str
       ['Pads', 'Eight one-shots. Press a pad to play it. Higher on the pad is softer. While the transport runs and QUANT is on, the hit waits for the next beat.'],
       ['Pad menus', 'Picks a different one-shot for that pad. You can also drop a browser sound onto a pad.'],
       ['Voice', 'What the keys play. Desk synth uses the Devices synth. The named banks play chromatic samples (EP, saw, sub, pluck, bass, keys, and the vox banks that are in the library). Browser plays the sound selected in the browser, at its own pitch on the named note and transposed from there.'],
-      ['Keys', 'The on-screen piano. A–K on the keyboard plays the same voice. Shift is softer. Higher on a key is softer. C marks middle C and the C above it.'],
+      ['Keys', 'The on-screen piano. Hold the mouse or a finger and drag across the keys: each key plays as you enter it and releases when you leave it. Let go to release the last key. A–K on the keyboard plays the same voice. Shift is softer. Higher on a key is softer. C marks middle C and the C above it.'],
     ],
   },
   {

@@ -123,7 +123,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   playTitle.textContent = 'Perform';
   const playHint = document.createElement('p');
   playHint.className = 'note';
-  playHint.textContent = 'Each pad plays its sample. Pick a kit or choose a one-shot per pad. The Voice menu switches the keys between the desk synth and sample banks. Higher on a pad or key is softer.';
+  playHint.textContent = 'Each pad plays its sample. Pick a kit or choose a one-shot per pad. The Voice menu switches the keys between the desk synth and sample banks. Higher on a pad or key is softer. Hold and drag across the keys to glide.';
   playHead.append(playTitle);
   const kitLabel = document.createElement('label');
   kitLabel.className = 'kit-pick';
@@ -159,6 +159,8 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
   const padIds: Array<string | null> = Array.from({ length: PAD_COUNT }, () => null);
   let banks: ChromaticBank[] = [];
   const keyButtons = new Map<number, HTMLButtonElement>();
+  /** Pointer id → midi currently held by that pointer, or null while the press is between keys. */
+  const glide = new Map<number, number | null>();
 
   let samples: SampleMeta[] = [];
   let category = 'All';
@@ -279,19 +281,77 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     handlers.noteOff(midi);
   });
 
+  function glideHolds(note: number): boolean {
+    for (const current of glide.values()) {
+      if (current === note) return true;
+    }
+    return false;
+  }
+
+  function keyUnder(x: number, y: number): { key: HTMLButtonElement; midi: number } | null {
+    const hit = document.elementFromPoint(x, y);
+    const button = hit instanceof Element ? hit.closest('.piano-white, .piano-black') : null;
+    if (!(button instanceof HTMLButtonElement) || !piano.contains(button)) return null;
+    const note = Number(button.dataset.midi);
+    if (!Number.isFinite(note)) return null;
+    return { key: button, midi: note };
+  }
+
+  /** Note-on when the held pointer enters a key, note-off when it leaves. */
+  function setGlide(pointerId: number, midi: number | null, velocity: number): void {
+    const previous = glide.has(pointerId) ? (glide.get(pointerId) ?? null) : null;
+    if (glide.has(pointerId) && previous === midi) return;
+    glide.set(pointerId, midi);
+    if (previous !== null && !glideHolds(previous)) {
+      keyButtons.get(previous)?.classList.remove('is-down');
+      handlers.noteOff(previous);
+    }
+    if (midi !== null && [...glide.values()].filter((current) => current === midi).length === 1) {
+      keyButtons.get(midi)?.classList.add('is-down');
+      handlers.noteOn(midi, velocity);
+    }
+  }
+
+  function endGlide(pointerId: number): void {
+    if (!glide.has(pointerId)) return;
+    const previous = glide.get(pointerId) ?? null;
+    glide.delete(pointerId);
+    if (previous !== null && !glideHolds(previous)) {
+      keyButtons.get(previous)?.classList.remove('is-down');
+      handlers.noteOff(previous);
+    }
+  }
+
   function bindKey(key: HTMLButtonElement, midi: number): void {
     key.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
       event.preventDefault();
-      key.setPointerCapture(event.pointerId);
-      key.classList.add('is-down');
-      handlers.noteOn(midi, velocityAt(event, key));
+      try {
+        key.setPointerCapture(event.pointerId);
+      } catch {
+        /* The pointer can already be gone. */
+      }
+      setGlide(event.pointerId, midi, velocityAt(event, key));
     });
-    const release = (): void => {
-      key.classList.remove('is-down');
-      handlers.noteOff(midi);
+    key.addEventListener('pointermove', (event) => {
+      if (!glide.has(event.pointerId)) return;
+      if (event.pointerType === 'mouse' && (event.buttons & 1) === 0) {
+        endGlide(event.pointerId);
+        return;
+      }
+      const hit = keyUnder(event.clientX, event.clientY);
+      if (!hit) {
+        setGlide(event.pointerId, null, 0);
+        return;
+      }
+      setGlide(event.pointerId, hit.midi, velocityAt(event, hit.key));
+    });
+    const release = (event: PointerEvent): void => {
+      endGlide(event.pointerId);
     };
     key.addEventListener('pointerup', release);
     key.addEventListener('pointercancel', release);
+    key.addEventListener('lostpointercapture', release);
   }
 
   function visible(): SampleMeta[] {
