@@ -1,6 +1,6 @@
 # RS-4 Session Kit
 
-Playable library shipped with this console: **442** files, about **20.1 MB**.
+Playable library shipped with this console: **465** files, about **31.2 MB**.
 Everything here is **CC0 1.0** (public domain dedication). You can use it commercially, including redistributing it in this app.
 
 No commercial drum kits, stock vocal recordings, or copyrighted material are included.
@@ -21,7 +21,7 @@ Rebuild with `python3 scripts/build-library.py` (Python 3, numpy, ffmpeg, and ne
 | Vocal | 40 | Original formant synthesis (not a recorded voice) |
 | FX | 32 | Original rises, downs, impacts, zaps, drops, and noise hits |
 | Ambience | 13 | Original noise beds and drones |
-| Loops | 49 | Two-bar grooves at 80–140 BPM |
+| Loops | 72 | Two-bar grooves at 80–140 BPM, plus CC0 musical loops from OpenGameArt |
 
 ## Virtuosity Drums excerpts (recorded)
 
@@ -166,3 +166,39 @@ Written for this project and dedicated to the public domain under CC0 1.0 by the
 - Bass loops, pad loops, shuffle loops, and percussion loops in `loops/`
 
 Legacy ids (`kick`, `snare`, `hat`, `hat-open`, `house`, `halftime`, `stick`, `rim`, `tom-hi`, `tom-lo`, `ride`, `shaker`, `perc-loop`, `bass-c`, `bass-loop`, `key-c`, `chord`, `pad`, `rise`, `wash`) still resolve so the default pads and the previous session kit keep working.
+
+## OpenGameArt musical loops (CC0)
+
+23 additional loops, **11,140,814 bytes**, live in `loops/oga-*.wav`.
+Each one is dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) on [OpenGameArt.org](https://opengameart.org/).
+CC0 does not require credit. The notices below stay with the files: Riintron asked to be credited, and OpenGameArt asks for a link back to the source page.
+Files are 16-bit mono WAV at 22.05 kHz. Loop points are the author's; silence was not trimmed.
+`oga-simple-beat.wav` is the first two bars of the body loop only (the separate intro is not included).
+
+| Shipped file | Name | Author | Source | Original file |
+| --- | --- | --- | --- | --- |
+| `loops/oga-fat-groove.wav` | Fat Groove | Riintron | [Fat Groove Drums](https://opengameart.org/content/fat-groove-drums) | `drums.wav` |
+| `loops/oga-prehistoric-drums.wav` | Prehistoric Drums | hornpipe2 | [Prehistoric Drum Loop](https://opengameart.org/content/prehistoric-drum-loop) | `select.wav` |
+| `loops/oga-tense-drums-140.wav` | Tense Drums 140 | Fupi | [Tense Bass Boost Drum Loop 140 BPM](https://opengameart.org/content/tense-bass-boost-drum-loop-140-bpm) | `tensebassboostdrums.wav` |
+| `loops/oga-edm-bright.wav` | EDM Bright | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `brightmelodicedm.wav` |
+| `loops/oga-edm-bright-loop.wav` | EDM Bright Loop | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `brightmelodicloopyedm.wav` |
+| `loops/oga-edm-bright-skip.wav` | EDM Bright Skip | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `brightmelodicskippyedm.wav` |
+| `loops/oga-edm-melodic.wav` | EDM Melodic | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `melodicedm.wav` |
+| `loops/oga-edm-melodic-loop.wav` | EDM Melodic Loop | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `melodicloopyedm.wav` |
+| `loops/oga-edm-melodic-skip.wav` | EDM Melodic Skip | Fupi | [Melodic EDM Loops](https://opengameart.org/content/melodic-edm-loops) | `melodicskippyedm.wav` |
+| `loops/oga-funky-victory.wav` | Funky Victory | Archonic | [Funky Victory Loop (No Guitar)](https://opengameart.org/content/funky-victory-loop-no-guitar) | `funky-victory-loop-noguitar.mp3` |
+| `loops/oga-ukulele.wav` | Ukulele | StarNinjas | [Ukulele Forest](https://opengameart.org/content/ukulele-forest-beginning-loop-and-end) | `forest_loop.ogg` |
+| `loops/oga-guitar-chords.wav` | Guitar Chords | Spargus | [Dark Smooth Loop](https://opengameart.org/content/dark-smooth-loop) | `Pause guitar.ogg` |
+| `loops/oga-soft-synth.wav` | Soft Synth | killerfishred | [Short Synth Loop](https://opengameart.org/content/short-synth-loop) | `loop.wav` |
+| `loops/oga-cinematic-drums.wav` | Cinematic Drums | Marwan Antonios | [Cinematic percussion loop](https://opengameart.org/content/cinematic-percussion-loop) | `Cinematic percussion loop 2.wav` |
+| `loops/oga-mountain.wav` | Mountain | beardalaxy | [Mountain Theme Loop](https://opengameart.org/content/mountain-theme-loop) | `mountain_in_game.ogg` |
+| `loops/oga-menu-keys.wav` | Menu Keys | Akikazer | [Menu Loop](https://opengameart.org/content/menu-loop) | `Loop-Menu.wav` |
+| `loops/oga-horde-drums.wav` | Horde Drums | William Hector | [Horde War Drums loop](https://opengameart.org/content/horde-war-drums-loop) | `horde_war_drums_by_william_hector.wav` |
+| `loops/oga-adventure-keys.wav` | Adventure Keys | KiluaBoy | [Sci Fi / Adventure / Eastern / Quiet Piano](https://opengameart.org/content/sci-fi-adventure-eastern-quiet-piano-loop) | `AnAdventure.wav` |
+| `loops/oga-simple-beat.wav` | Simple Beat | Turnovus | [simple drumbeat](https://opengameart.org/content/simple-drumbeat) | `drumbeat_body_ogg.ogg` |
+| `loops/oga-bass-line.wav` | Bass Line | burabotti | [Bass Loop](https://opengameart.org/content/bass-loop) | `bass_loop.ogg` |
+| `loops/oga-piano-song.wav` | Piano Song | frosty ham | [Short Piano Song Loop](https://opengameart.org/content/short-piano-song-loop) | `pianosong.ogg` |
+| `loops/oga-into-the-stars.wav` | Into The Stars | KiluaBoy | [Sci Fi / Adventure / Eastern / Quiet Piano](https://opengameart.org/content/sci-fi-adventure-eastern-quiet-piano-loop) | `IntoTheStars.wav` |
+| `loops/oga-happy-clappy.wav` | Happy Clappy | OwlishMedia | [Happy Clappy Loop](https://opengameart.org/content/happy-clappy-loop) | `HappyClappyLoop.wav` |
+
+Prehistoric Drums is a WAV render of the author's own MIDI using the Fluid GM soundfont. Happy Clappy is the author's loop of music from their short film Cat's Sky, dedicated CC0 on the source page.
