@@ -86,9 +86,9 @@ Audio tracks record the channel after the inserts, fader, and pan. Instrument tr
 
 ## Sample library
 
-The playable kit lives in `public/samples/` and is served with the site. The current pack is 442 CC0 sounds, about 20 MB. `catalog.json` is the index. Audio files load only when you preview, place, or trigger them. The browser can search, filter by category, hits versus loops, and BPM, and it can star favorites in this browser.
+The playable kit lives in `public/samples/` and is served with the site. The current pack is 465 CC0 sounds, about 31.2 MB. `catalog.json` is the index. Audio files load only when you preview, place, or trigger them. The browser can search, filter by category, hits versus loops, and BPM, and it can star favorites in this browser.
 
-Recorded drums are trimmed excerpts of [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) (CC0) performed by Austin McMahon. House, half-time, and break loops sequence those hits at several tempos. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and the remaining loops are original synthesis dedicated to CC0 for this project. The vocal chops are not a recorded singer. Names, files, and licenses are in `public/samples/ATTRIBUTION.md` and under **Sample credits** in the browser. Rebuild with `python3 scripts/build-library.py` (numpy, ffmpeg, and network access to the Virtuosity repository). `scripts/build-session-kit.py` runs that same builder.
+Recorded drums are trimmed excerpts of [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) (CC0) performed by Austin McMahon. House, half-time, and break loops sequence those hits at several tempos. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and the original loops are synthesis dedicated to CC0 for this project. Additional musical loops are CC0 pieces from OpenGameArt. The vocal chops are not a recorded singer. Names, files, and licenses are in `public/samples/ATTRIBUTION.md` and under **Sample credits** in the browser. Rebuild with `python3 scripts/build-library.py` (numpy, ffmpeg, and network access to the Virtuosity repository). `scripts/build-session-kit.py` runs that same builder.
 
 ## Limits
 

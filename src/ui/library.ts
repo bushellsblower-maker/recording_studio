@@ -520,7 +520,7 @@ export function buildLibrary(handlers: LibraryHandlers): LibraryPanel {
     banks = chromaticBanks(samples);
     limit = PAGE;
     const total = samples.length;
-    creditCopy.textContent = `${total} sounds, CC0. Recorded drums are trimmed Virtuosity Drums excerpts performed by Austin McMahon at Virtuosity Musical Instruments, Boston, published by Versilian Studios. Loops marked recorded sequence those hits; percussion loops also layer original shaker and conga synthesis. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and shuffle, bass, and pad loops are original synthesis dedicated to CC0 for this console. Formant chops are not a recorded singer. See ATTRIBUTION.md for every file.`;
+    creditCopy.textContent = `${total} sounds, CC0. Recorded drums are trimmed Virtuosity Drums excerpts performed by Austin McMahon at Virtuosity Musical Instruments, Boston, published by Versilian Studios. Loops marked recorded sequence those hits; percussion loops also layer original shaker and conga synthesis. Bass, keys, hand percussion, formant vocal chops, FX, ambience, electro drums, and shuffle, bass, and pad loops are original synthesis dedicated to CC0 for this console. Extra musical loops are CC0 pieces from OpenGameArt. Formant chops are not a recorded singer. See ATTRIBUTION.md for every file.`;
     paintCats();
     paintFilters();
     fillPadPicks();
