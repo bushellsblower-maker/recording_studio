@@ -18,7 +18,9 @@ writeFileSync(out, source);
 
 function resolveSha() {
   const fromEnv = (process.env.WORKERS_CI_COMMIT_SHA || process.env.GITHUB_SHA || "").trim();
-  if (fromEnv) return fromEnv.slice(0, 7);
+  // Builds without a commit hash set WORKERS_CI_COMMIT_SHA to the branch name.
+  // Only accept a hex SHA; otherwise fall back to git.
+  if (/^[0-9a-f]{7,40}$/i.test(fromEnv)) return fromEnv.slice(0, 7).toLowerCase();
   try {
     const full = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
     if (full) return full.slice(0, 7);
