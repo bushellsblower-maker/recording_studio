@@ -1,13 +1,23 @@
-# Assets-only Worker. `npm run build` writes the Vite SPA to ./dist.
+# Vite SPA in ./dist, fronted by src/worker.ts. `npm run build` writes the SPA.
 # GitHub Actions runs `wrangler deploy` on push to main.
 name = "recording-studio"
 compatibility_date = "2026-09-29"
 workers_dev = false
 account_id = "f027194dcc0be7e3812e673468bab58d"
+main = "src/worker.ts"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
+run_worker_first = true
+
+[version_metadata]
+binding = "CF_VERSION"
+
+[[analytics_engine_datasets]]
+binding = "AUDIT_HITS"
+dataset = "cybush"
 
 # Hostname is config-only. Deploy attaches this custom domain on zone cybush.uk.
 [[routes]]

@@ -4,6 +4,8 @@ A browser recording console. It uses the Web Audio API for a live microphone, a 
 
 Live site: **https://recstudio.cybush.uk** (Cloudflare Worker `recording-studio`). The microphone works there because the custom domain is HTTPS.
 
+Version: curl -sI https://recstudio.cybush.uk/ | grep x-cybush-version ; /__version
+
 ## Run
 
 ```bash
